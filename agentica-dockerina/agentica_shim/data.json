@@ -1,0 +1,90 @@
+{
+    "messages": [
+        {
+            "role": "system",
+            "content": "At first, the user's language locale code is \"C\". When you are conversating with the user or describing the function calling result, consider it and always translate to the target locale language. Never conversate with different locale language text with the user.\n\nAt second, the user's timezone is \"Asia/Seoul\", and ISO datetime is 2025-06-24T11:26:54.136Z. When you are conversating with the user, consider current time and user belonged timezone."
+        },
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "getApiFunctions",
+                    "function": {
+                        "name": "getApiFunctions",
+                        "arguments": "{}"
+                    }
+                }
+            ]
+        },
+        {
+            "role": "tool",
+            "tool_call_id": "getApiFunctions",
+            "content": "[{\"name\":\"index\",\"description\":\"Get all articles.\\n\\nList up every articles archived in the BBS DB.\"},{\"name\":\"create\",\"description\":\"Create a new article.\\n\\nWrites a new article and archives it into the DB.\"},{\"name\":\"update\",\"description\":\"Update an article.\\n\\nUpdates an article with new content.\"},{\"name\":\"erase\",\"description\":\"Erase an article.\\n\\nErases an article from the DB.\"}]"
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "can you like try to use the tool functions I gave you?"
+                }
+            ]
+        },
+        {
+            "role": "system",
+            "content": "You are a helpful assistant for selecting functions to call.\n\nUse the supplied tools to select some functions of `getApiFunctions()` returned.\n\nWhen selecting functions to call, pay attention to the relationship between functions. In particular, check the prerequisites between each function.\n\nIf you can't find any proper function to select, just type your own message. By the way, when typing your own message, please consider the user's language locale code. If your message is different with the user's language, please translate it to the user's."
+        }
+    ],
+    "tools": [
+        {
+            "type": "function",
+            "function": {
+                "name": "selectFunctions",
+                "description": "Select proper API functions to call.\n\nIf you A.I. agent has found some proper API functions to call\nfrom the conversation with user, please select the API functions\njust by calling this function.\n\nWhen user wants to call a same function multiply, you A.I. agent must\nlist up it multiply in the `functions` property. Otherwise the user has\nrequested to call many different functions, you A.I. agent have to assign\nthem all into the `functions` property.\n\nAlso, if you A.I. agent can't specify a specific function to call due to lack\nof specificity or homogeneity of candidate functions, just assign all of them\nby in the` functions` property` too. Instead, when you A.I. agent can specify\na specific function to call, the others would be eliminated.",
+                "parameters": {
+                    "description": " Properties of the function\n\n------------------------------\n\nCurrent Type: {@link __IChatFunctionReference.IProps}",
+                    "type": "object",
+                    "properties": {
+                        "functions": {
+                            "title": "List of target functions",
+                            "description": "List of target functions.",
+                            "type": "array",
+                            "items": {
+                                "description": "Current Type: {@link ___IChatFunctionReference}",
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "title": "The reason of the function selection",
+                                        "description": "The reason of the function selection.\n\nJust write the reason why you've determined to select this function.",
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "title": "Name of the target function to call",
+                                        "description": "Name of the target function to call.",
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "reason",
+                                    "name"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "functions"
+                    ],
+                    "additionalProperties": false,
+                    "$defs": {}
+                }
+            }
+        }
+    ],
+    "tool_choice": "auto",
+    "model": "gpt-4o-mini",
+    "stream": true,
+    "stream_options": {
+        "include_usage": true
+    }
+}
