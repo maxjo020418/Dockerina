@@ -1,0 +1,3 @@
+[submodule "agentica-dockerina/server/agentica"]
+	path = agentica-dockerina/server/agentica
+	url = https://github.com/maxjo020418/agentica
