@@ -1,3 +1,10 @@
+/*
+NOTES:
+@agentica from separate branch!
+
+> pnpm build && pnpm start
+*/
+
 import { Agentica, IAgenticaHistoryJson } from "@agentica/core";
 import {
   AgenticaRpcService,
@@ -11,7 +18,8 @@ import typia, { Primitive } from "typia";
 import { SGlobal } from "./SGlobal";
 import { BbsArticleService } from "./services/BbsArticleService";
 
-
+// custom stuffs
+import type { ILlmSchema } from "@samchon/openapi/lib/structures/ILlmSchema";
 
 const getPromptHistories = async (
   id: string,
@@ -25,27 +33,54 @@ const main = async (): Promise<void> => {
   if (SGlobal.env.OPENAI_API_KEY === undefined)
     console.error("env.OPENAI_API_KEY is not defined.");
 
+  // "chatgpt" | "claude" | "deepseek" | "gemini" | "llama" | "3.0" | "3.1"
+  type ModelType = Extract<ILlmSchema.Model, "llama">;
+  const modeltype: ModelType = "llama";
+
   const server: WebSocketServer<
     null,
-    IAgenticaRpcService<"chatgpt">,
+    IAgenticaRpcService<ModelType>,
     IAgenticaRpcListener
   > = new WebSocketServer();
   await server.open(Number(SGlobal.env.PORT), async (acceptor) => {
     const url: URL = new URL(`http://localhost${acceptor.path}`);
-    const agent: Agentica<"chatgpt"> = new Agentica({
-      model: "chatgpt",
+    const agent: Agentica<ModelType> = new Agentica({
+      model: modeltype,
       vendor: {
         api: new OpenAI({ 
           apiKey: SGlobal.env.OPENAI_API_KEY,
-          baseURL: "http://localhost:8000",
+          baseURL: "http://localhost:8000/v1"
         }),
-        model: "llama3.1:8b",
+        model: "llama3.1:8b" // local-ollama
+        //model: "gpt-4o-mini" // chatgpt
+      },
+      config: {
+        // just inserted into prompt, don't need to specify BCP 47 format
+        // only used in AgenticaSystemPrompt.COMMON
+        locale: "English",
+        // timezone: "",
+
+        // syspromt order: `.../src/orchestrate/select.ts` is used... (idk why not `initialize.ts`)
+        //    COMMON -> <TOOL_CALLS(history) & TOOL> -> <USER INP> -> SELECT(problematic)
+        // hardcoded prompt orders, CANNOT change
+
+        systemPrompt: {
+          common: () => [
+            "The user's choice of language is ${locale}, remember this and communicate in that language.",
+            "The user is in the timezone: ${timezone}, consider this when communicating."
+          ].join(" "),
+          //describe: () => "",
+          select: () => "", // hmmm
+          //execute: () => "",
+          //initialize: () => "",
+          //cancel: () => "",
+        }
       },
       controllers: [
         {
           protocol: "class",
           name: "bbs",
-          application: typia.llm.application<BbsArticleService, "chatgpt">(),
+          application: typia.llm.application<BbsArticleService, ModelType>(),
           execute: new BbsArticleService(),
         },
         
@@ -56,7 +91,7 @@ const main = async (): Promise<void> => {
           ? []
           : await getPromptHistories(url.pathname.slice(1)),
     });
-    const service: AgenticaRpcService<"chatgpt"> = new AgenticaRpcService({
+    const service: AgenticaRpcService<ModelType> = new AgenticaRpcService({
       agent,
       listener: acceptor.getDriver(),
     });
