@@ -1,5 +1,4 @@
 import json
-import asyncio
 from flask import Flask, request, Response
 
 from openai import AsyncOpenAI

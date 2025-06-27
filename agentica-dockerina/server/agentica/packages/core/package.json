@@ -23,7 +23,11 @@
     "swagger",
     "openapi"
   ],
-  "main": "src/index.ts",
+  
+  "main": "lib/index.js",
+  "module": "lib/index.mjs",
+  "typings": "lib/index.d.ts",
+
   "files": [
     "LICENSE",
     "README.md",

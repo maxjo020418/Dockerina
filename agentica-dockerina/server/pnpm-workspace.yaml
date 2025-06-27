@@ -1,7 +1,7 @@
 packages:
   - '.'
   - 'src/*'
-  - 'agentica/packages/*'  # custom agentica /core
+  - 'agentica/packages/*'  # for custom agentica /core & /rpc
 
 catalogs:
   libs:
