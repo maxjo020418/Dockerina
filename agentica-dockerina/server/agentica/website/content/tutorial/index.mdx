@@ -1,0 +1,199 @@
+---
+title: Agentica > Tutorial > Getting Started
+---
+
+import { YoutubeRenderer } from "../../components/YoutubeRenderer";
+
+## Preface
+
+This tutorial guides you through setting up the foundation for developing multiple agents using **Agentica**. Regardless of whether an agent is designed for email processing, workflow automation, or data handling, there are common tasks that all agents must perform. This guide walks you through the essential setup process to establish a **consistent** and **scalable** development environment.
+
+<br />
+<br />
+<YoutubeRenderer src="https://www.youtube.com/embed/UR4JIpQc7rw"/>
+<br />
+<br />
+
+## Project Setup
+
+First, create a new project using agentica cli.
+
+```bash
+# Run agentica cli. A project folder named “agentica-test” will be created.
+npx agentica start agentica-test
+```
+
+If you are asked the following questions, press `y`. Installing the agentica package to use agentica cli.
+
+```bash
+Need to install the following packages:
+agentica@version
+Ok to proceed? (y)
+```
+
+Choose package manager and Project Type.
+
+```bash
+? Package Manager (Use arrow keys)
+❯ npm
+  pnpm
+  yarn (berry is not supported)
+  bun
+
+? Project Type
+  Standalone Application
+  NodeJS Agent Server
+  NestJS Agent Server
+  React Client Application
+  React Native Client Application
+❯ NestJS + React Agent Server + Client Application
+```
+
+If you choose the project type except `Standalone`, you should enter the port number.
+
+```bash
+? Server Port(if project is client app, this port mean ws server port): (3000)
+```
+
+Select connectors that you want to use. If you don't want to use any connector, Just press the `enter`.
+
+```bash
+? Embedded Controllers (Press <space> to select, <a> to toggle all, <i> to invert selection, and <enter> to proceed)
+❯◯ ARXIV SEARCH
+ ◯ AWS S3
+ ◯ CALENDLY
+ ◯ CAREER
+ ◯ CSV
+ ◯ DALL E-3
+ ◯ DAUM BLOG
+   ...
+```
+
+Finally, enter you openai api key.
+
+```bash
+? Please enter your OPENAI_API_KEY: YOUR_OPENAI_API_KEY
+```
+
+After the project is created, move into the project folder.
+
+```bash
+cd agentica-test
+```
+
+### In this tutorial, we will use the following:
+
+- **Package Manager** : npm
+- **Project Type** : NestJS + React
+- **Server Port** : 3000
+- **Embedded Controllers** : Nothing
+
+## Generated Code Overview
+
+The generated code in NestJS project is as follows:
+
+```ts
+// server/src/controllers/chat/ChatController.ts
+@Controller("chat")
+export class MyChatController {
+  @WebSocketRoute()
+  public async start(
+    @WebSocketRoute.Acceptor()
+    acceptor: WebSocketAcceptor<
+      undefined,
+      IAgenticaRpcService<"chatgpt">,
+      IAgenticaRpcListener
+    >
+  ): Promise<void> {
+    const agent: Agentica<"chatgpt"> = new Agentica({
+      model: "chatgpt",
+      vendor: {
+        api: new OpenAI({ apiKey: MyGlobal.env.OPENAI_API_KEY }),
+        model: "gpt-4o-mini",
+      },
+      controllers: [
+        assertHttpController({
+          name: "bbs",
+          model: "chatgpt",
+          document: await fetch(
+            `http://localhost:${MyConfiguration.API_PORT()}/editor/swagger.json`
+          ).then((r) => r.json()),
+          connection: {
+            host: `http://localhost:${MyConfiguration.API_PORT()}`,
+            headers: {
+              Authorization: "Bearer *****",
+            },
+          },
+        }),
+      ],
+    });
+    const service: AgenticaRpcService<"chatgpt"> = new AgenticaRpcService({
+      agent,
+      listener: acceptor.getDriver(),
+    });
+    await acceptor.accept(service);
+  }
+}
+```
+
+This code sets up an Agent that runs tool calling to the localhost using the fetched Swagger.
+
+## Project Build & Start
+
+When you select the project type as `NestJS + React`, there are `client` and `server` folders.
+
+- `client` is the React project.
+- `server` is the NestJS project.
+
+Open two terminals and run the following commands.
+
+- You should build first before running the project.
+
+### Run React Project
+
+```bash
+# move to react project folder
+cd client
+
+# install dependencies
+npm install
+
+# build & run
+npm run build && npm run start
+```
+
+### Run NestJS Project
+
+```bash
+# move to nestjs project folder
+cd server
+
+# install dependencies
+npm install
+
+# build & run
+npm run build && npm run start
+```
+
+### Environment Variables
+
+If you want to use the environment variables in the project, you need to add environment variables to `.env` file.
+
+```bash
+OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+
+# your api keys. for example, google, github, aws and so on.
+GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY
+```
+
+### Why This Setup Matters
+
+This setup ensures that multiple agents can be developed in a **standardized** manner. Regardless of the agent's purpose, the following elements are essential:
+
+- **Structured development environment** (TypeScript & tsconfig)
+- **AI processing capabilities** (OpenAI API integration)
+- **Core agent framework** (Agentica Core)
+- **Efficient type handling** (Typia for serialization and validation)
+- **Environment variable management** (dotenv for API key security)
+
+By following these steps, all agents will share a **consistent architecture**, making it significantly easier to **scale**, **maintain**, and **extend** their functionality.

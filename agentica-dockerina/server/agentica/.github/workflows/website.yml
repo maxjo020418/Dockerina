@@ -1,0 +1,35 @@
+name: website
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/*/src/**"
+      - "packages/*/package.json"
+      - "website/**"
+      - package.json
+      - .github/workflows/website.yml
+  pull_request:
+    paths:
+      - "packages/*/src/**"
+      - "website/**"
+      - package.json
+      - .github/workflows/website.yml
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+      - name: Root
+        run: pnpm install --frozen-lockfile
+      - name: Website
+        run: pnpm run build
+        working-directory: website
+      - name: Deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8 # v4.7.3
+        with:
+          branch: gh-pages
+          folder: ./website/out

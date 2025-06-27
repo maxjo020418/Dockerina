@@ -1,0 +1,81 @@
+{
+  "name": "@agentica/core",
+  "version": "0.29.0",
+  "description": "Agentic AI Library specialized in LLM Function Calling",
+  "author": "Wrtn Technologies",
+  "license": "MIT",
+  "homepage": "https://wrtnlabs.io/agentica",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wrtnlabs/agentica"
+  },
+  "bugs": {
+    "url": "https://github.com/wrtnlabs/agentica/issues"
+  },
+  "keywords": [
+    "openai",
+    "chatgpt",
+    "anthropic",
+    "claude",
+    "ai",
+    "chatbot",
+    "nestia",
+    "swagger",
+    "openapi"
+  ],
+  "main": "src/index.ts",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "lib",
+    "package.json",
+    "prompts",
+    "src"
+  ],
+  "scripts": {
+    "prepare": "ts-patch install && pnpm build:prompt",
+    "build": "rimraf lib && pnpm build:prompt && tsc && rollup -c && node build/post.js",
+    "build:prompt": "node build/prompt.js",
+    "dev": "rimraf lib && tsc --watch",
+    "prepack": "pnpm run build",
+    "lint": "eslint .",
+    "format": "eslint --fix .",
+    "test": "vitest"
+  },
+  "publishConfig": {
+    "main": "lib/index.js",
+    "module": "lib/index.mjs",
+    "typings": "lib/index.d.ts",
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@samchon/openapi": "catalog:typia",
+    "openai": "catalog:libs",
+    "typia": "catalog:typia"
+  },
+  "dependencies": {
+    "@samchon/openapi": "catalog:typia",
+    "tstl": "catalog:libs",
+    "typia": "catalog:typia",
+    "uuid": "^11.0.4"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "catalog:mcp",
+    "@nestia/e2e": "^6.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@ryoppippi/unplugin-typia": "catalog:typia",
+    "@types/node": "^22.13.9",
+    "@types/uuid": "^10.0.0",
+    "@wrtnlabs/calculator-mcp": "catalog:mcp",
+    "openai": "catalog:libs",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.34.8",
+    "ts-node": "catalog:typescript",
+    "ts-patch": "catalog:typescript",
+    "tstl": "catalog:libs",
+    "typedoc": "^0.27.7",
+    "typescript": "catalog:typescript",
+    "vitest": "catalog:vite"
+  }
+}

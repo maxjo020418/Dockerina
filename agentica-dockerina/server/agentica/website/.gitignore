@@ -1,0 +1,7 @@
+.next/
+typedoc-json/
+
+out/
+_pagefind/
+public/api/
+public/playground/

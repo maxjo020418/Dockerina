@@ -1,0 +1,107 @@
+{
+  "name": "@agentica/station",
+  "version": "0.29.0",
+  "private": true,
+  "packageManager": "pnpm@10.6.4",
+  "description": "Agentic AI library specialized in LLM Function Calling",
+  "author": "Wrtn Technologies",
+  "license": "MIT",
+  "homepage": "https://wrtnlabs.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wrtnlabs/agentica"
+  },
+  "bugs": {
+    "url": "https://github.com/wrtnlabs/agentica/issues"
+  },
+  "keywords": [
+    "openai",
+    "chatgpt",
+    "anthropic",
+    "claude",
+    "ai",
+    "chatbot",
+    "nestia",
+    "swagger",
+    "openapi"
+  ],
+  "files": [
+    "LICENSE",
+    "README.md",
+    "lib",
+    "package.json",
+    "prompts",
+    "src"
+  ],
+  "engines": {
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "build:packages": "pnpm --filter='./packages/**' -r build",
+    "package:latest": "pnpm --filter='./packages/**' -r publish --tag latest",
+    "package:next": "pnpm --filter='./packages/**' -r publish --tag next",
+    "preinstall": "npx only-allow pnpm",
+    "release": "node deploy/sync_readme.js && bumpp",
+    "lint": "pnpm --no-bail --aggregate-output /^lint:/",
+    "lint:root": "eslint .",
+    "lint:submodules": "pnpm --parallel -r --no-bail --aggregate-output /^lint/",
+    "format": "pnpm --aggregate-output /^format:/",
+    "format:root": "eslint . --fix",
+    "format:submodules": "pnpm --parallel -r --aggregate-output /^format/",
+    "test": "pnpm --aggregate-output /^test:/",
+    "test:e2e": "pnpm --filter='./test' -r start",
+    "test:packages": "pnpm --filter='./packages/**' --parallel -r --aggregate-output /^test/",
+    "sync-readme": "node deploy/sync_readme.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@wrtnlabs/eslint-config": "^0.4.3",
+    "bumpp": "^10.1.0",
+    "eslint": "^9.23.0",
+    "eslint-plugin-format": "^1.0.1",
+    "js-yaml": "^4.1.0",
+    "rimraf": "^6.0.1",
+    "typedoc": "^0.27.7",
+    "typedoc-github-theme": "^0.2.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.0.0"
+    },
+    "patchedDependencies": {
+      "@bluwy/giget-core": "patches/@bluwy__giget-core.patch"
+    }
+  },
+  "changelogithub": {
+    "types": {
+      "feat": {
+        "title": "🚀 Features"
+      },
+      "fix": {
+        "title": "🐞 Bug Fixes"
+      },
+      "perf": {
+        "title": "🏎 Performance"
+      },
+      "docs": {
+        "title": "📝 Documentation"
+      },
+      "test": {
+        "title": "✅ Tests"
+      },
+      "ci": {
+        "title": "🤖 CI"
+      },
+      "style": {
+        "title": "🎨 Styles"
+      },
+      "build": {
+        "title": "📦 Build"
+      },
+      "refactor": {
+        "title": "🔨 Code Refactoring"
+      }
+    }
+  }
+}
