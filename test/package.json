@@ -1,0 +1,41 @@
+{
+  "name": "@agentica/test",
+  "version": "0.29.0",
+  "private": true,
+  "description": "Test program of Agentica",
+  "author": "Wrtn Technologies",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "dev": "tsc --watch --noEmit",
+    "prepare": "ts-patch install",
+    "start": "ts-node src",
+    "lint": "eslint .",
+    "format": "eslint --fix ."
+  },
+  "dependencies": {
+    "@agentica/benchmark": "workspace:^",
+    "@agentica/core": "workspace:^",
+    "@agentica/rpc": "workspace:^",
+    "@agentica/vector-selector": "workspace:^",
+    "@modelcontextprotocol/sdk": "catalog:mcp",
+    "@nestia/e2e": "^6.0.1",
+    "@samchon/openapi": "catalog:typia",
+    "@samchon/shopping-api": "^0.17.0",
+    "@wrtnlabs/calculator-mcp": "catalog:mcp",
+    "chalk": "4.1.2",
+    "dotenv": "^16.4.7",
+    "dotenv-expand": "^12.0.1",
+    "openai": "catalog:libs",
+    "tgrid": "^1.1.0",
+    "tstl": "catalog:libs",
+    "typia": "catalog:typia",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0",
+    "ts-node": "catalog:typescript",
+    "ts-patch": "catalog:typescript",
+    "typescript": "catalog:typescript"
+  }
+}
