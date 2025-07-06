@@ -20,6 +20,7 @@ import { BbsArticleService } from "./services/BbsArticleService";
 
 // custom stuffs
 import type { ILlmSchema } from "@samchon/openapi/lib/structures/ILlmSchema";
+//import { ollamaSelect } from "./OllamaSelect";
 
 const getPromptHistories = async (
   id: string,
@@ -33,69 +34,100 @@ const main = async (): Promise<void> => {
   if (SGlobal.env.OPENAI_API_KEY === undefined)
     console.error("env.OPENAI_API_KEY is not defined.");
 
+  // model type here: --------------------------------------
   // "chatgpt" | "claude" | "deepseek" | "gemini" | "llama" | "3.0" | "3.1"
-  type ModelType = Extract<ILlmSchema.Model, "llama">;
-  const modeltype: ModelType = "llama";
+  type ModelType = Extract<ILlmSchema.Model, "deepseek">;
+  const modeltype: ModelType = "deepseek";
+  // -------------------------------------------------------
 
   const server: WebSocketServer<
     null,
     IAgenticaRpcService<ModelType>,
     IAgenticaRpcListener
   > = new WebSocketServer();
-  await server.open(Number(SGlobal.env.PORT), async (acceptor) => {
-    const url: URL = new URL(`http://localhost${acceptor.path}`);
-    const agent: Agentica<ModelType> = new Agentica({
-      model: modeltype,
-      vendor: {
-        api: new OpenAI({ 
-          apiKey: SGlobal.env.OPENAI_API_KEY,
-          baseURL: "http://localhost:8000/v1"
-        }),
-        model: "llama3.1:8b" // local-ollama
-        //model: "gpt-4o-mini" // chatgpt
-      },
-      config: {
-        // just inserted into prompt, don't need to specify BCP 47 format
-        // only used in AgenticaSystemPrompt.COMMON
-        locale: "English",
-        // timezone: "",
 
-        // syspromt order: `.../src/orchestrate/select.ts` is used... (idk why not `initialize.ts`)
-        //    COMMON -> <TOOL_CALLS(history) & TOOL> -> <USER INP> -> SELECT(problematic)
-        // hardcoded prompt orders, CANNOT change
-
-        systemPrompt: {
-          common: () => [
-            "The user's choice of language is ${locale}, remember this and communicate in that language.",
-            "The user is in the timezone: ${timezone}, consider this when communicating."
-          ].join(" "),
-          //describe: () => "",
-          select: () => "", // hmmm
-          //execute: () => "",
-          //initialize: () => "",
-          //cancel: () => "",
-        }
-      },
-      controllers: [
+  await server.open(
+    Number(SGlobal.env.PORT), async (acceptor) => {
+      const url: URL = new URL(`http://localhost${acceptor.path}`);
+      const agent: Agentica<ModelType> = new Agentica(
         {
-          protocol: "class",
-          name: "bbs",
-          application: typia.llm.application<BbsArticleService, ModelType>(),
-          execute: new BbsArticleService(),
-        },
-        
-      ],
-      histories:
-        // check {id} parameter
-        url.pathname === "/"
-          ? []
-          : await getPromptHistories(url.pathname.slice(1)),
-    });
-    const service: AgenticaRpcService<ModelType> = new AgenticaRpcService({
-      agent,
-      listener: acceptor.getDriver(),
-    });
-    await acceptor.accept(service);
-  });
+          model: modeltype,
+          vendor: {
+            api: new OpenAI({ 
+              apiKey: SGlobal.env.OPENAI_API_KEY,
+              baseURL: "http://localhost:8000/v1" // http://localhost:11434/v1
+            }),
+            model: "qwen3:14b" // ollama models (NO QWEN3 SCHEMA YET)
+            //model: "gpt-4o-mini" // chatgpt API
+          },
+
+          config: {
+            // just inserted into prompt, don't need to specify BCP 47 format
+            // only used for AgenticaSystemPrompt.COMMON
+            // ------------------
+            locale: "English",
+            // timezone: "",
+            // ------------------
+
+            // syspromt order: `.../src/orchestrate/select.ts` is used... (idk why not `initialize.ts`)
+            //    COMMON -> <TOOL_CALLS(history) & TOOL> -> <USER INP> -> SELECT(problematic)
+            
+            // hardcoded prompt orders & structure, CANNOT change -> Modding needed
+            // @ agentica/packages/core/src/orchestrate
+
+            systemPrompt: {
+              common: () => [
+                "The user's choice of language is \"${locale}\".",
+                "The user's timezone is: \"${timezone}\".",
+                "There will be an example of the default function you can call.",
+              ].join("\n"),
+              // describe: () => "",
+              // select: () => [
+              //   "Use available tools to pick appropriate functions.",
+              //   "Check dependencies between functions before selecting.",
+              //   "If no suitable function exists, just respond to the user.",
+              //   "But do not reply to the user in JSON or a dictionary format, use human language to answer the user's question.",
+              // ].join("\n"),
+              // execute: () => "",
+              // initialize: () => "",
+              // cancel: () => "",
+            },
+
+            executor: {
+              //select: ollamaSelect
+            },
+
+            // enable Chain of Thought reasoning
+            // (only for ollama's COT supported models)
+            think: true,
+          },
+
+          controllers: [
+            {
+              protocol: "class",
+              name: "bbs",
+              application: typia.llm.application<BbsArticleService, ModelType>(),
+              execute: new BbsArticleService(),
+            },
+          ],
+
+          histories:
+            // check {id} parameter
+            url.pathname === "/"
+              ? []
+              : await getPromptHistories(url.pathname.slice(1)),
+        }
+      );
+
+      const service: AgenticaRpcService<ModelType> = new AgenticaRpcService(
+        {
+          agent,
+          listener: acceptor.getDriver(),
+        }
+      );
+
+      await acceptor.accept(service);
+    }
+  );
 };
 main().catch(console.error);

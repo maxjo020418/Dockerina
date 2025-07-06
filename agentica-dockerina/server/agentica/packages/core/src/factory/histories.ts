@@ -126,9 +126,7 @@ export function decodeHistory<Model extends ILlmSchema.Model>(history: AgenticaH
   throw new Error(`Unsupported history type, value: ${JSON.stringify(history)}`);
 }
 
-/**
- * @internal
- */
+
 export function decodeUserMessageContent(content: AgenticaUserMessageContent): OpenAI.ChatCompletionContentPart {
   if (content.type === "text") {
     return content;

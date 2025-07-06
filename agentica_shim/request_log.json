@@ -1,0 +1,100 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "The user's choice of language is \"English\".\nThe user's timezone is: \"Asia/Seoul\".\nThere will be an example of the default function you can call."
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "type": "function",
+          "id": "getApiFunctions",
+          "function": {
+            "name": "getApiFunctions",
+            "arguments": "{}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "getApiFunctions",
+      "content": "[{\"name\":\"index\",\"description\":\"Get all articles.\\n\\nList up every articles archived in the BBS DB.\"},{\"name\":\"create\",\"description\":\"Create a new article.\\n\\nWrites a new article and archives it into the DB.\"},{\"name\":\"update\",\"description\":\"Update an article.\\n\\nUpdates an article with new content.\"},{\"name\":\"erase\",\"description\":\"Erase an article.\\n\\nErases an article from the DB.\"}]"
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "hello"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": "<think>\nOkay, the user said \"hello\". Let me check the functions available. The tools provided are index, create, update, erase. None of these functions are for greetings or general conversation. The user might be testing if I can handle non-function calls. Since there's no function for greeting, I should respond politely without using any tool. I need to make sure not to call any functions here. Just a simple hello response.\n</think>\n\nHello! How can I assist you today?"
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "what can you do?"
+        }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "selectFunctions",
+        "description": "Select the appropriate API functions to invoke based on the user\u2019s request.\nIf you don't need to call functions or tools, DO NOT CALL THIS FUNCTION.\n\nIf you found some proper API functions to call, select the API functions via calling THIS function.\n\nFor example, if the user wants to call a function called `multiply`, you must put `multiply` in the `functions` property. \nIf the user requested to call multiple functions, you have to assign all into the `functions` property.",
+        "parameters": {
+          "description": " Properties of the function\n\n------------------------------\n\nCurrent Type: {@link __IChatFunctionReference.IProps}",
+          "type": "object",
+          "properties": {
+            "functions": {
+              "title": "List of target functions",
+              "description": "List of target functions.",
+              "type": "array",
+              "items": {
+                "description": "Current Type: {@link ___IChatFunctionReference}",
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "title": "The reason of the function selection",
+                    "description": "The reason of the function selection.\n\nJust write the reason why you've determined to select this function.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "title": "Name of the target function to call. the function must be one of the tools listed",
+                    "description": "Name of the target function to call. the function must be one of the tools listed.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "reason",
+                  "name"
+                ]
+              }
+            }
+          },
+          "required": [
+            "functions"
+          ],
+          "additionalProperties": false,
+          "$defs": {}
+        }
+      }
+    }
+  ],
+  "tool_choice": "auto",
+  "model": "qwen3:14b",
+  "stream": true,
+  "stream_options": {
+    "include_usage": true
+  },
+  "think": true
+}

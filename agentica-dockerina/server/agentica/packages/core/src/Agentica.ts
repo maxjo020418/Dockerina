@@ -30,6 +30,13 @@ import { __map_take } from "./utils/__map_take";
 import { ChatGptCompletionMessageUtil } from "./utils/ChatGptCompletionMessageUtil";
 import { streamDefaultReaderToAsyncGenerator, StreamUtil } from "./utils/StreamUtil";
 
+// === Edited here ===
+// Added for Qwen, Deepseek's COT (Chain of Thought) reasoning. (Ollama)
+interface AgenticaRequestBody extends OpenAI.ChatCompletionCreateParamsStreaming { 
+  think?: boolean | undefined;
+}
+// === END Edited ===
+
 /**
  * Agentica AI chatbot agent.
  *
@@ -98,6 +105,7 @@ export class Agentica<Model extends ILlmSchema.Model> {
     );
 
     // STATUS
+    console.log("`executor` config status:", typeof props.config?.executor === "function")
     this.executor_
       = typeof props.config?.executor === "function"
         ? props.config.executor
@@ -274,7 +282,10 @@ export class Agentica<Model extends ILlmSchema.Model> {
           stream_options: {
             include_usage: true,
           },
-        },
+          // TODO: use custom ollama-xxx `Model` to auto-add extra options such as `think`
+          // Added for Qwen, Deepseek's COT (Chain of Thought) reasoning
+          think: this.props.config?.think ?? false,
+        } as AgenticaRequestBody, // expand prev. body's type scope
         options: {
           ...this.props.vendor.options,
           signal: props.abortSignal,

@@ -120,4 +120,10 @@ export interface IAgenticaConfig<Model extends ILlmSchema.Model> {
    * @default true
    */
   eliticism?: boolean;
+
+  /**
+     * Chain of Thought reasoning.
+     * * @default false
+     */
+  think?: boolean;
 }

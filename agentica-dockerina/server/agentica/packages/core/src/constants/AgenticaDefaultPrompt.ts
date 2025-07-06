@@ -25,12 +25,16 @@ const getTimezone = new Singleton(
 );
 
 export function write<Model extends ILlmSchema.Model>(config?: IAgenticaConfig<Model> | IMicroAgenticaConfig<Model>): string {
-  if (config?.systemPrompt?.common !== undefined) {
-    return (config.systemPrompt as IMicroAgenticaSystemPrompt<Model>).common!(config as unknown as IMicroAgenticaConfig<Model>);
-  }
-
   const locale: string = config?.locale ?? getLocale.get();
   const timezone: string = config?.timezone ?? getTimezone.get();
+
+  if (config?.systemPrompt?.common !== undefined) {
+    return (config.systemPrompt as IMicroAgenticaSystemPrompt<Model>).common!(config as unknown as IMicroAgenticaConfig<Model>)
+      .replace("${locale}", locale)
+      .replace("${timezone}", timezone)
+      .replace("${datetime}", new Date().toISOString());
+  }
+  console.log("systemPrompt.common is undefined");
 
   return AgenticaSystemPrompt.COMMON
     // intended code
