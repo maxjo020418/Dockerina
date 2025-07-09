@@ -13,26 +13,21 @@ import {
   LlmTypeCheckerV3_1,
 } from "@samchon/openapi";
 
-import type { AgenticaContext } from "../context/AgenticaContext";
-import type { AgenticaOperation } from "../context/AgenticaOperation";
-import type { MicroAgenticaContext } from "../context/MicroAgenticaContext";
-import type { AgenticaAssistantMessageEvent, AgenticaExecuteEvent } from "../events";
-import type { AgenticaCallEvent } from "../events/AgenticaCallEvent";
-import type { MicroAgenticaHistory } from "../histories/MicroAgenticaHistory";
+import {
+    AgenticaContext,
+    AgenticaOperation,
+    // MicroAgenticaContext, // don't think it's gonna be used
+    AgenticaAssistantMessageEvent,
+    AgenticaExecuteEvent,
+    AgenticaCallEvent,
+    MicroAgenticaHistory,
+    isAgenticaContext
+} from "@agentica/core";
 
-import { AgenticaConstant } from "../constants/AgenticaConstant";
-import { AgenticaDefaultPrompt } from "../constants/AgenticaDefaultPrompt";
-import { AgenticaSystemPrompt } from "../constants/AgenticaSystemPrompt";
-import { isAgenticaContext } from "../context/internal/isAgenticaContext";
-import { creatAssistantMessageEvent, createCallEvent, createExecuteEvent, createValidateEvent } from "../factory/events";
-import { decodeHistory, decodeUserMessageContent } from "../factory/histories";
-import { ChatGptCompletionMessageUtil } from "../utils/ChatGptCompletionMessageUtil";
-import { StreamUtil, toAsyncGenerator } from "../utils/StreamUtil";
+import { factory, orchestrate, utils, constants } from "@agentica/core"
 
-import { cancelFunctionFromContext } from "./internal/cancelFunctionFromContext";
-
-export async function call<Model extends ILlmSchema.Model>(
-  ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>,
+export async function ollamaCall<Model extends ILlmSchema.Model>(
+  ctx: AgenticaContext<Model>, // | MicroAgenticaContext<Model>,
   operations: AgenticaOperation<Model>[],
 ): Promise<AgenticaExecuteEvent<Model>[]> {
   // ----
@@ -43,14 +38,14 @@ export async function call<Model extends ILlmSchema.Model>(
       // COMMON SYSTEM PROMPT
       {
         role: "system",
-        content: AgenticaDefaultPrompt.write(ctx.config),
+        content: constants.AgenticaDefaultPrompt.write(ctx.config),
       } satisfies OpenAI.ChatCompletionSystemMessageParam,
       // PREVIOUS HISTORIES
-      ...ctx.histories.map(decodeHistory).flat(),
+      ...ctx.histories.map(factory.decodeHistory).flat(),
       // USER INPUT
       {
         role: "user",
-        content: ctx.prompt.contents.map(decodeUserMessageContent),
+        content: ctx.prompt.contents.map(factory.decodeUserMessageContent),
       },
       // SYSTEM PROMPT
       ...(ctx.config?.systemPrompt?.execute === null
@@ -58,7 +53,7 @@ export async function call<Model extends ILlmSchema.Model>(
         : [{
           role: "system",
           content: ctx.config?.systemPrompt?.execute?.(ctx.histories as MicroAgenticaHistory<Model>[])
-            ?? AgenticaSystemPrompt.EXECUTE,
+            ?? constants.AgenticaSystemPrompt.EXECUTE,
         } satisfies OpenAI.ChatCompletionSystemMessageParam]),
     ],
     // STACKED FUNCTIONS
@@ -95,8 +90,8 @@ export async function call<Model extends ILlmSchema.Model>(
   // ----
   // PROCESS COMPLETION
   // ----
-  const chunks = await StreamUtil.readAll(completionStream);
-  const completion = ChatGptCompletionMessageUtil.merge(chunks);
+  const chunks = await utils.StreamUtil.readAll(completionStream);
+  const completion = utils.ChatGptCompletionMessageUtil.merge(chunks);
   const executes: AgenticaExecuteEvent<Model>[] = [];
 
   for (const choice of completion.choices) {
@@ -107,7 +102,7 @@ export async function call<Model extends ILlmSchema.Model>(
         if (operation === undefined) {
           continue;
         }
-        const call: AgenticaCallEvent<Model> = createCallEvent({
+        const call: AgenticaCallEvent<Model> = factory.createCallEvent({
           id: tc.id,
           operation,
           // @TODO add type assertion!
@@ -120,7 +115,7 @@ export async function call<Model extends ILlmSchema.Model>(
           });
         }
 
-        console.log("[call.ts] function call protocol:", call.operation.protocol)
+        console.log("[OllamaCall.ts] function call protocol:", call.operation.protocol)
 
         ctx.dispatch(call);
 
@@ -133,7 +128,7 @@ export async function call<Model extends ILlmSchema.Model>(
         executes.push(exec);
 
         if (isAgenticaContext(ctx)) {
-          cancelFunctionFromContext(ctx, {
+          orchestrate.cancelFunctionFromContext(ctx, {
             name: call.operation.name,
             reason: "completed",
           });
@@ -146,10 +141,10 @@ export async function call<Model extends ILlmSchema.Model>(
       && choice.message.content.length !== 0
     ) {
       const text: string = choice.message.content;
-      const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
+      const event: AgenticaAssistantMessageEvent = factory.creatAssistantMessageEvent({
         get: () => text,
         done: () => true,
-        stream: toAsyncGenerator(text),
+        stream: utils.toAsyncGenerator(text),
         join: async () => Promise.resolve(text),
       });
       ctx.dispatch(event);
@@ -159,7 +154,7 @@ export async function call<Model extends ILlmSchema.Model>(
 }
 
 async function propagate<Model extends ILlmSchema.Model>(
-  ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>,
+  ctx: AgenticaContext<Model>, // | MicroAgenticaContext<Model>,
   call: AgenticaCallEvent<Model>,
   retry: number,
 ): Promise<AgenticaExecuteEvent<Model>> {
@@ -182,7 +177,7 @@ async function propagate<Model extends ILlmSchema.Model>(
 
 async function propagateHttp<Model extends ILlmSchema.Model>(
   props: {
-    ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>;
+    ctx: AgenticaContext<Model>, // | MicroAgenticaContext<Model>;
     operation: AgenticaOperation.Http<Model>;
     call: AgenticaCallEvent<Model>;
     retry: number;
@@ -197,14 +192,14 @@ async function propagateHttp<Model extends ILlmSchema.Model>(
   );
   if (check.success === false) {
     props.ctx.dispatch(
-      createValidateEvent({
+      factory.createValidateEvent({
         id: props.call.id,
         operation: props.operation,
         result: check,
       }),
     );
 
-    if (props.retry++ < (props.ctx.config?.retry ?? AgenticaConstant.RETRY)) {
+    if (props.retry++ < (props.ctx.config?.retry ?? constants.AgenticaConstant.RETRY)) {
       const trial: AgenticaExecuteEvent<Model> | null = await correct(
         props.ctx,
         props.call,
@@ -225,14 +220,14 @@ async function propagateHttp<Model extends ILlmSchema.Model>(
           = ((response.status === 400
             || response.status === 404
             || response.status === 422)
-          && props.retry++ < (props.ctx.config?.retry ?? AgenticaConstant.RETRY)
+          && props.retry++ < (props.ctx.config?.retry ?? constants.AgenticaConstant.RETRY)
           && typeof response.body) === false;
       // DISPATCH EVENT
     return (
       (success === false
         ? await correct(props.ctx, props.call, props.retry, response.body)
         : null)
-      ?? createExecuteEvent({
+      ?? factory.createExecuteEvent({
         operation: props.call.operation,
         arguments: props.call.arguments,
         value: response,
@@ -241,7 +236,7 @@ async function propagateHttp<Model extends ILlmSchema.Model>(
   }
   catch (error) {
     // DISPATCH ERROR
-    return createExecuteEvent({
+    return factory.createExecuteEvent({
       operation: props.call.operation,
       arguments: props.call.arguments,
       value: {
@@ -261,7 +256,7 @@ async function propagateHttp<Model extends ILlmSchema.Model>(
 }
 
 async function propagateClass<Model extends ILlmSchema.Model>(props: {
-  ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>;
+  ctx: AgenticaContext<Model>, // | MicroAgenticaContext<Model>;
   operation: AgenticaOperation.Class<Model>;
   call: AgenticaCallEvent<Model>;
   retry: number;
@@ -275,17 +270,17 @@ async function propagateClass<Model extends ILlmSchema.Model>(props: {
   );
   if (check.success === false) {
     props.ctx.dispatch(
-      createValidateEvent({
+      factory.createValidateEvent({
         id: props.call.id,
         operation: props.call.operation,
         result: check,
       }),
     );
     return (
-      (props.retry++ < (props.ctx.config?.retry ?? AgenticaConstant.RETRY)
+      (props.retry++ < (props.ctx.config?.retry ?? constants.AgenticaConstant.RETRY)
         ? await correct(props.ctx, props.call, props.retry, check.errors)
         : null)
-      ?? createExecuteEvent({
+      ?? factory.createExecuteEvent({
         operation: props.call.operation,
         arguments: props.call.arguments,
         value: {
@@ -299,14 +294,14 @@ async function propagateClass<Model extends ILlmSchema.Model>(props: {
   // EXECUTE FUNCTION
   try {
     const value = await executeClassOperation(props.operation, props.call.arguments);
-    return createExecuteEvent({
+    return factory.createExecuteEvent({
       operation: props.call.operation,
       arguments: props.call.arguments,
       value,
     });
   }
   catch (error) {
-    return createExecuteEvent({
+    return factory.createExecuteEvent({
       operation: props.call.operation,
       arguments: props.call.arguments,
       value:
@@ -322,7 +317,7 @@ async function propagateClass<Model extends ILlmSchema.Model>(props: {
 }
 
 async function propagateMcp<Model extends ILlmSchema.Model>(props: {
-  ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>;
+  ctx: AgenticaContext<Model>, // | MicroAgenticaContext<Model>;
   operation: AgenticaOperation.Mcp<Model>;
   call: AgenticaCallEvent<Model>;
   retry: number;
@@ -333,14 +328,14 @@ async function propagateMcp<Model extends ILlmSchema.Model>(props: {
   // @TODO: implement argument validation logic
   try {
     const value = await executeMcpOperation(props.operation, props.call.arguments);
-    return createExecuteEvent({
+    return factory.createExecuteEvent({
       operation: props.call.operation,
       arguments: props.call.arguments,
       value,
     });
   }
   catch (error) {
-    return createExecuteEvent({
+    return factory.createExecuteEvent({
       operation: props.call.operation,
       arguments: props.call.arguments,
       value:
@@ -402,7 +397,7 @@ async function executeMcpOperation<Model extends ILlmSchema.Model>(
 }
 
 async function correct<Model extends ILlmSchema.Model>(
-  ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>,
+  ctx: AgenticaContext<Model>, // | MicroAgenticaContext<Model>,
   call: AgenticaCallEvent<Model>,
   retry: number,
   error: unknown,
@@ -415,14 +410,14 @@ async function correct<Model extends ILlmSchema.Model>(
       // COMMON SYSTEM PROMPT
       {
         role: "system",
-        content: AgenticaDefaultPrompt.write(ctx.config),
+        content: constants.AgenticaDefaultPrompt.write(ctx.config),
       } satisfies OpenAI.ChatCompletionSystemMessageParam,
       // PREVIOUS HISTORIES
-      ...ctx.histories.map(decodeHistory).flat(),
+      ...ctx.histories.map(factory.decodeHistory).flat(),
       // USER INPUT
       {
         role: "user",
-        content: ctx.prompt.contents.map(decodeUserMessageContent),
+        content: ctx.prompt.contents.map(factory.decodeUserMessageContent),
       },
       // TYPE CORRECTION
       ...(ctx.config?.systemPrompt?.execute === null
@@ -431,7 +426,7 @@ async function correct<Model extends ILlmSchema.Model>(
           role: "system",
           content:
           ctx.config?.systemPrompt?.execute?.(ctx.histories as MicroAgenticaHistory<Model>[])
-          ?? AgenticaSystemPrompt.EXECUTE,
+          ?? constants.AgenticaSystemPrompt.EXECUTE,
         } satisfies OpenAI.ChatCompletionSystemMessageParam]
       ),
       {
@@ -499,8 +494,8 @@ async function correct<Model extends ILlmSchema.Model>(
     // parallel_tool_calls: false,
   });
 
-  const chunks = await StreamUtil.readAll(completionStream);
-  const completion = ChatGptCompletionMessageUtil.merge(chunks);
+  const chunks = await utils.StreamUtil.readAll(completionStream);
+  const completion = utils.ChatGptCompletionMessageUtil.merge(chunks);
 
   // ----
   // PROCESS COMPLETION
@@ -516,7 +511,7 @@ async function correct<Model extends ILlmSchema.Model>(
   }
   return propagate(
     ctx,
-    createCallEvent({
+    factory.createCallEvent({
       id: toolCall.id,
       operation: call.operation,
       arguments: JSON.parse(toolCall.function.arguments) as Record<string, unknown>,

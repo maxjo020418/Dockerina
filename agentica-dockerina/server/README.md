@@ -9,6 +9,8 @@ pnpm start
 
 # full rebuild
 pnpm --filter @agentica/core --filter @agentica/rpc build && pnpm build && pnpm start
+# or
+pnpm --filter @agentica/core build && pnpm build && pnpm start
 ```
 
 ### Changes

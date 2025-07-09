@@ -15,17 +15,10 @@ import type {
   AgenticaEvent,
 } from "@agentica/core";
 
-import type { __IChatFunctionReference } from "./function-refs/__IChatFunctionReference"
-import type { __IChatSelectFunctionsApplication } from "./function-refs/__IChatSelectFunctionsApplication"
+import { factory, orchestrate, utils, constants } from "@agentica/core"
 
-import { AgenticaConstant } from "../agentica/packages/core/lib/constants/AgenticaConstant"
-import { AgenticaDefaultPrompt } from "../agentica/packages/core/lib/constants/AgenticaDefaultPrompt";
-import { creatAssistantMessageEvent } from "../agentica/packages/core/lib/factory/events";
-import { ChatGptCompletionMessageUtil } from "../agentica/packages/core/lib/utils/ChatGptCompletionMessageUtil";
-import { StreamUtil, toAsyncGenerator } from "../agentica/packages/core/lib/utils/StreamUtil";
-
-import { decodeHistory, decodeUserMessageContent } from "../agentica/packages/core/src/factory";
-import { selectFunctionFromContext } from "../agentica/packages/core/src/orchestrate/internal/selectFunctionFromContext";
+import type { __IChatFunctionReference } from "../function-refs/__IChatFunctionReference"
+import type { __IChatSelectFunctionsApplication } from "../function-refs/__IChatSelectFunctionsApplication"
 
 const CONTAINER: ILlmApplication<"chatgpt"> = typia.llm.application<
   __IChatSelectFunctionsApplication,
@@ -67,7 +60,7 @@ export async function ollamaSelect<Model extends ILlmSchema.Model>(
 
   // ELITICISM
   if (
-    (ctx.config?.eliticism ?? AgenticaConstant.ELITICISM) === true
+    (ctx.config?.eliticism ?? constants.AgenticaConstant.ELITICISM) === true
     && stacks.some(s => s.length !== 0)
   ) {
     return step(
@@ -105,7 +98,7 @@ async function step<Model extends ILlmSchema.Model>(
       // COMMON SYSTEM PROMPT
       {
         role: "system",
-        content: AgenticaDefaultPrompt.write(ctx.config),
+        content: constants.AgenticaDefaultPrompt.write(ctx.config),
       } satisfies OpenAI.ChatCompletionSystemMessageParam,
       
       // CANDIDATE FUNCTIONS
@@ -141,20 +134,21 @@ async function step<Model extends ILlmSchema.Model>(
       },
 
       // PREVIOUS HISTORIES
-      ...ctx.histories.map(decodeHistory).flat(),
+      ...ctx.histories.map(factory.decodeHistory).flat(),
 
-      // // SYSTEM PROMPT
-      // {
-      //   role: "system",
-      //   content:
-      //     ctx.config?.systemPrompt?.select?.(ctx.histories)
-      //     ?? AgenticaSystemPrompt.SELECT,
-      // },
+      // SYSTEM PROMPT
+      {
+        role: "system",
+        content:
+            ctx.config?.systemPrompt?.select?.(ctx.histories)
+            ?? constants.AgenticaSystemPrompt.SELECT
+        ,
+      },
 
       // USER INPUT
       {
         role: "user",
-        content: ctx.prompt.contents.map(decodeUserMessageContent),
+        content: ctx.prompt.contents.map(factory.decodeUserMessageContent),
       },
       
       // TYPE CORRECTIONS
@@ -184,13 +178,13 @@ async function step<Model extends ILlmSchema.Model>(
     // parallel_tool_calls: false,
   });
 
-  const chunks = await StreamUtil.readAll(completionStream);
-  const completion = ChatGptCompletionMessageUtil.merge(chunks);
+  const chunks = await utils.StreamUtil.readAll(completionStream);
+  const completion = utils.ChatGptCompletionMessageUtil.merge(chunks);
 
   // ----
   // VALIDATION
   // ----
-  if (retry++ < (ctx.config?.retry ?? AgenticaConstant.RETRY)) {
+  if (retry++ < (ctx.config?.retry ?? constants.AgenticaConstant.RETRY)) {
     const failures: IFailure[] = [];
     for (const choice of completion.choices) {
       for (const tc of choice.message.tool_calls ?? []) {
@@ -236,7 +230,7 @@ async function step<Model extends ILlmSchema.Model>(
           continue;
         }
         for (const reference of input.functions) {
-          selectFunctionFromContext(ctx, reference);
+          orchestrate.selectFunctionFromContext(ctx, reference);
         }
       }
     }
@@ -247,8 +241,8 @@ async function step<Model extends ILlmSchema.Model>(
       && choice.message.content != null
       && choice.message.content.length !== 0
     ) {
-      const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
-        stream: toAsyncGenerator(choice.message.content),
+      const event: AgenticaAssistantMessageEvent = factory.creatAssistantMessageEvent({
+        stream: utils.toAsyncGenerator(choice.message.content),
         join: async () => Promise.resolve(choice.message.content!),
         done: () => true,
         get: () => choice.message.content!,

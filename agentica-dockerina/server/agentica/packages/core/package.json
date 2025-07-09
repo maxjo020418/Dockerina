@@ -27,6 +27,28 @@
   "main": "lib/index.js",
   "module": "lib/index.mjs",
   "typings": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "require": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    },
+    "./constants": {
+      "import": "./lib/constants/index.js",
+      "require": "./lib/constants/index.js",
+      "types": "./lib/constants/index.d.ts"
+    },
+    "./utils": {
+      "import": "./lib/utils/index.js",
+      "require": "./lib/utils/index.js",
+      "types": "./lib/utils/index.d.ts"
+    },
+    "./factory": {
+      "import": "./lib/factory/index.js",
+      "require": "./lib/factory/index.js",
+      "types": "./lib/factory/index.d.ts"
+    }
+  },
 
   "files": [
     "LICENSE",

@@ -3,9 +3,7 @@ import type { ILlmSchema } from "@samchon/openapi";
 import type { AgenticaContext } from "../AgenticaContext";
 import type { MicroAgenticaContext } from "../MicroAgenticaContext";
 
-/**
- * @internal
- */
+// internal (** removed JSDoc for external access **)
 export function isAgenticaContext<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>,
 ): ctx is AgenticaContext<Model> {

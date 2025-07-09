@@ -15,9 +15,7 @@ import type { AgenticaSystemMessageHistory } from "../histories/AgenticaSystemMe
 import type { AgenticaUserMessageHistory } from "../histories/AgenticaUserMessageHistory";
 import type { IAgenticaHistoryJson } from "../json/IAgenticaHistoryJson";
 
-/**
- * @internal
- */
+// internal (** removed JSDoc for external access **)
 export function decodeHistory<Model extends ILlmSchema.Model>(history: AgenticaHistory<Model>): OpenAI.ChatCompletionMessageParam[] {
   // NO NEED TO DECODE DESCRIBE
   if (history.type === "describe") {

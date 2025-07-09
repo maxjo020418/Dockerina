@@ -20,7 +20,9 @@ import { BbsArticleService } from "./services/BbsArticleService";
 
 // custom stuffs
 import type { ILlmSchema } from "@samchon/openapi/lib/structures/ILlmSchema";
-//import { ollamaSelect } from "./OllamaSelect";
+
+import { ollamaSelect } from "./executors/OllamaSelect";
+import { ollamaCall } from "./executors/OllamaCall";
 
 const getPromptHistories = async (
   id: string,
@@ -62,7 +64,7 @@ const main = async (): Promise<void> => {
           },
 
           config: {
-            // just inserted into prompt, don't need to specify BCP 47 format
+            // just inserted into prompt, don't need to specify BCP-47 format
             // only used for AgenticaSystemPrompt.COMMON
             // ------------------
             locale: "English",
@@ -94,7 +96,8 @@ const main = async (): Promise<void> => {
             },
 
             executor: {
-              //select: ollamaSelect
+              select: ollamaSelect,
+              call: ollamaCall,
             },
 
             // enable Chain of Thought reasoning
@@ -102,6 +105,7 @@ const main = async (): Promise<void> => {
             think: true,
           },
 
+          // le' functions I add
           controllers: [
             {
               protocol: "class",

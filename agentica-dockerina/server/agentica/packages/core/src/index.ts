@@ -10,7 +10,6 @@ export * from "./MicroAgentica";
 export * as orchestrate from "./orchestrate";
 export * from "./structures";
 
-/**
- * @internal
- */
+// internal (** removed JSDoc for external access **)
 export * as utils from "./utils";
+export * as constants from "./constants";

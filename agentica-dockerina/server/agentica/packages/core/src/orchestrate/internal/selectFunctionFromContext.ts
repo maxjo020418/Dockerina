@@ -9,9 +9,7 @@ import type { AgenticaSelectEvent } from "../../events/AgenticaSelectEvent";
 import { createSelectEvent } from "../../factory/events";
 import { createOperationSelection } from "../../factory/operations";
 
-/**
- * @internal
- */
+// internal (** removed JSDoc for external access **)
 export function selectFunctionFromContext<
   Model extends ILlmSchema.Model,
 >(

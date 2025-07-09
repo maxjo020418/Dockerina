@@ -8,9 +8,7 @@ import type { AgenticaCancelEvent } from "../../events";
 import { createCancelEvent } from "../../factory/events";
 import { createOperationSelection } from "../../factory/operations";
 
-/**
- * @internal
- */
+// internal (** removed JSDoc for external access **)
 export function cancelFunctionFromContext<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model>,
   reference: __IChatFunctionReference,
