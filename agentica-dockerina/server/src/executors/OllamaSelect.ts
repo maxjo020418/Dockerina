@@ -17,13 +17,8 @@ import type {
 
 import { factory, orchestrate, utils, constants } from "@agentica/core"
 
-import type { __IChatFunctionReference } from "../function-refs/__IChatFunctionReference"
-import type { __IChatSelectFunctionsApplication } from "../function-refs/__IChatSelectFunctionsApplication"
-
-const CONTAINER: ILlmApplication<"chatgpt"> = typia.llm.application<
-  __IChatSelectFunctionsApplication,
-  "chatgpt"
->();
+import type { __IChatFunctionReference } from "../function-refs/__IChatFunctionReference";
+import type { __IChatSelectFunctionsApplication } from "../function-refs/__IChatSelectFunctionsApplication";
 
 interface IFailure {
   id: string;
@@ -34,8 +29,10 @@ interface IFailure {
 export async function ollamaSelect<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model>,
 ): Promise<void> {
+  const container: ILlmApplication<Model> =
+    typia.llm.application<__IChatSelectFunctionsApplication, Model>();
   if (ctx.operations.divided === undefined) {
-    return step(ctx, ctx.operations.array, 0);
+    return step(ctx, ctx.operations.array, container, 0);
   }
 
   const stacks: AgenticaOperationSelection<Model>[][]
@@ -53,6 +50,7 @@ export async function ollamaSelect<Model extends ILlmSchema.Model>(
           },
         },
         operations,
+        container,
         0,
       ),
     ),
@@ -73,6 +71,7 @@ export async function ollamaSelect<Model extends ILlmSchema.Model>(
               .get(s.operation.controller.name)!
               .get(s.operation.function.name)!,
         ),
+      container,
       0,
     );
   }
@@ -87,6 +86,7 @@ export async function ollamaSelect<Model extends ILlmSchema.Model>(
 async function step<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model>,
   operations: AgenticaOperation<Model>[],
+  container: ILlmApplication<Model>,
   retry: number,
   failures?: IFailure[],
 ): Promise<void> {
@@ -158,13 +158,13 @@ async function step<Model extends ILlmSchema.Model>(
     tools: [{
       type: "function",
       function: {
-        name: CONTAINER.functions[0]!.name,
-        description: CONTAINER.functions[0]!.description,
+        name: container.functions[0]!.name,
+        description: container.functions[0]!.description,
         /**
          * @TODO fix it
          * The property and value have a type mismatch, but it works.
          */
-        parameters: CONTAINER.functions[0]!.parameters as unknown as Record<string, unknown>,
+        parameters: container.functions[0]!.parameters as unknown as Record<string, unknown>,
       },
     } satisfies OpenAI.ChatCompletionTool],
     tool_choice: retry === 0
@@ -172,7 +172,7 @@ async function step<Model extends ILlmSchema.Model>(
       : {
           type: "function",
           function: {
-            name: CONTAINER.functions[0]!.name,
+            name: container.functions[0]!.name,
           },
         },
     // parallel_tool_calls: false,
@@ -204,7 +204,7 @@ async function step<Model extends ILlmSchema.Model>(
       }
     }
     if (failures.length > 0) {
-      return step(ctx, operations, retry, failures);
+      return step(ctx, operations, container, retry, failures);
     }
   }
 
