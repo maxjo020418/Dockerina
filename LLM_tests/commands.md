@@ -1,5 +1,10 @@
 based on issue [6127](https://github.com/ollama/ollama/issues/6127)
 
 ```bash
-ollama create llama3.1-fcall -f Modelfile
+ollama show <modelname> > outfile.modelfile
+ollama create <modelname> -f outfile.modelfile
+
+curl -X POST http://localhost:11434/v1/chat/completions \
+     -H "Content-Type: application/json" \
+     --data @request_log.json
 ```
