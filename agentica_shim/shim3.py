@@ -1,17 +1,23 @@
 from flask import Flask, request, Response
 import requests
 import json
+import os
+from datetime import datetime
 
 app = Flask(__name__)
-LOG_FILE = 'request_log.json'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
 
 @app.route('/v1/chat/completions', methods=['POST'])
 def shim():
     # Parse JSON payload
     payload = request.get_json(force=True)
     
-    # Log payload to file (overwrite)
-    with open(LOG_FILE, 'w') as f:
+    # Log payload to a unique file inside LOG_DIR
+    os.makedirs(LOG_DIR, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    log_path = os.path.join(LOG_DIR, f"{timestamp}.json")
+    with open(log_path, 'w') as f:
         json.dump(payload, f, indent=2)
     
     # Prepare headers for forwarding (exclude Host)
