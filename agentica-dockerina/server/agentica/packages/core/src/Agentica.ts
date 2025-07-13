@@ -105,7 +105,7 @@ export class Agentica<Model extends ILlmSchema.Model> {
     );
 
     // STATUS
-    console.log("`executor` config status:", typeof props.config?.executor === "function")
+    console.log("[Agentica.ts] `executor` config status:", typeof props.config?.executor === "function")
     this.executor_
       = typeof props.config?.executor === "function"
         ? props.config.executor

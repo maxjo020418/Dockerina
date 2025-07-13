@@ -136,6 +136,12 @@ async function step<Model extends ILlmSchema.Model>(
       // PREVIOUS HISTORIES
       ...ctx.histories.map(factory.decodeHistory).flat(),
 
+      // USER INPUT
+      {
+        role: "user",
+        content: ctx.prompt.contents.map(factory.decodeUserMessageContent),
+      },
+
       // SYSTEM PROMPT
       {
         role: "system",
@@ -143,12 +149,6 @@ async function step<Model extends ILlmSchema.Model>(
             ctx.config?.systemPrompt?.select?.(ctx.histories)
             ?? constants.AgenticaSystemPrompt.SELECT
         ,
-      },
-
-      // USER INPUT
-      {
-        role: "user",
-        content: ctx.prompt.contents.map(factory.decodeUserMessageContent),
       },
       
       // TYPE CORRECTIONS

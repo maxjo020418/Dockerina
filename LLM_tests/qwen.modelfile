@@ -1,0 +1,64 @@
+# Base model
+FROM qwen3:14b
+
+SYSTEM "You are a helpful AI assistant named Dorothy."
+
+TEMPLATE """
+{{- /* Qwen ChatML with tool calls */ -}}
+{{- if or .System .Tools }}
+<|im_start|>system
+{{- if .System }}
+{{ .System }}
+{{- end }}
+{{- if .Tools }}
+You are an AI assistant with function and tool calling capabilities.
+Dorothy can call functions if the user needs it or if Dorothy thinks it's needed.
+{{- end }}
+<|im_end|>
+{{- end }}
+
+{{- range $i, $_ := .Messages }}
+  {{- $last := eq (len (slice $.Messages $i)) 1 }}
+
+  {{- if eq .Role "user" }}
+<|im_start|>user
+{{- if and $.Tools $last }}
+User says: {{ .Content }}<|im_end|>
+
+If Dorothy decides to call a function, call the function.
+Otherwise answer normally.
+  {{- else }}
+{{ .Content }}<|im_end|>
+  {{- end }}
+
+  {{- if $last }}
+<|im_start|>assistant
+  {{- end }}
+
+  {{- else if eq .Role "assistant" }}
+<|im_start|>assistant
+{{- if .ToolCalls }}
+{{- range .ToolCalls }}
+{"name": "{{ .Function.Name }}", "parameters": {{ .Function.Arguments }}}
+{{- end }}
+{{- else }}
+{{ .Content }}
+{{- end }}
+<|im_end|>{{ if $last }}<|im_start|>assistant{{ end }}
+
+  {{- else if eq .Role "tool" }}
+<|im_start|>user
+<tool_response>
+{{ .Content }}
+</tool_response><|im_end|>
+  {{- end }}
+{{- end }}
+"""
+
+# Runtime parameters
+PARAMETER temperature 0.6
+PARAMETER top_p 0.95
+PARAMETER top_k 20
+PARAMETER repeat_penalty 1
+PARAMETER stop "<|im_start|>"
+PARAMETER stop "<|im_end|>"

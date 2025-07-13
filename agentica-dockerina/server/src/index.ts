@@ -5,12 +5,18 @@ NOTES:
 > pnpm build && pnpm start
 */
 
-import { Agentica, IAgenticaHistoryJson } from "@agentica/core";
+import { 
+  Agentica, 
+  IAgenticaHistoryJson,
+  IAgenticaExecutor
+} from "@agentica/core";
+
 import {
   AgenticaRpcService,
   IAgenticaRpcListener,
   IAgenticaRpcService,
 } from "@agentica/rpc";
+
 import OpenAI from "openai";
 import { WebSocketServer } from "tgrid";
 import typia, { Primitive } from "typia";
@@ -38,8 +44,8 @@ const main = async (): Promise<void> => {
 
   // model type here: --------------------------------------
   // "chatgpt" | "claude" | "deepseek" | "gemini" | "llama" | "3.0" | "3.1"
-  type ModelType = Extract<ILlmSchema.Model, "deepseek">;
-  const modeltype: ModelType = "deepseek";
+  type ModelType = Extract<ILlmSchema.Model, "chatgpt">;
+  const modeltype: ModelType = "chatgpt";
   // -------------------------------------------------------
 
   const server: WebSocketServer<
@@ -51,7 +57,7 @@ const main = async (): Promise<void> => {
   await server.open(
     Number(SGlobal.env.PORT), async (acceptor) => {
       const url: URL = new URL(`http://localhost${acceptor.path}`);
-      const agent: Agentica<ModelType> = new Agentica(
+      const agent: Agentica<ModelType> = new Agentica<ModelType>(
         {
           model: modeltype,
           vendor: {
@@ -84,12 +90,11 @@ const main = async (): Promise<void> => {
                 "There will be an example of the default function you can call.",
               ].join("\n"),
               // describe: () => "",
-              // select: () => [
-              //   "Use available tools to pick appropriate functions.",
-              //   "Check dependencies between functions before selecting.",
-              //   "If no suitable function exists, just respond to the user.",
-              //   "But do not reply to the user in JSON or a dictionary format, use human language to answer the user's question.",
-              // ].join("\n"),
+              select: () => [
+                "Do not call the functions or tools directly,",
+                "use it via the 'selectFunctions' tool call to call any functions.",
+                "Check dependencies between functions before selecting.",
+              ].join("\n"),
               // execute: () => "",
               // initialize: () => "",
               // cancel: () => "",
