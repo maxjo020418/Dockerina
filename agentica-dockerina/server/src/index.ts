@@ -27,8 +27,9 @@ import { BbsArticleService } from "./services/BbsArticleService";
 // custom stuffs
 import type { ILlmSchema } from "@samchon/openapi/lib/structures/ILlmSchema";
 
-import { ollamaSelect } from "./executors/OllamaSelect";
-import { ollamaCall } from "./executors/OllamaCall";
+import { ollamaSelect } from "./OllamaOrchestrate/OllamaSelect";
+import { ollamaCall } from "./OllamaOrchestrate/OllamaCall";
+import { ollamaExecute } from "./OllamaOrchestrate/OllamaExecute";
 
 const getPromptHistories = async (
   id: string,
@@ -62,8 +63,8 @@ const main = async (): Promise<void> => {
           model: modeltype,
           vendor: {
             api: new OpenAI({ 
-              apiKey: SGlobal.env.OPENAI_API_KEY,
-              baseURL: "http://localhost:8000/v1" // http://localhost:11434/v1
+              apiKey: SGlobal.env.OPENAI_API_KEY, // dummy key
+              baseURL: "http://localhost:8000/v1" // http://localhost:11434/v1 for direct call
             }),
             model: "qwen3:14b" // ollama models (NO QWEN3 SCHEMA YET)
             //model: "gpt-4o-mini" // chatgpt API
@@ -77,7 +78,8 @@ const main = async (): Promise<void> => {
             // timezone: "",
             // ------------------
 
-            // syspromt order: `.../src/orchestrate/select.ts` is used... (idk why not `initialize.ts`)
+            // prompting order: `.../src/orchestrate/select.ts` is used... (idk why not `initialize.ts`)
+            // [Sysprompt gets prioprity anyways in ChatML, order for 'system' DOES NOT MATTER]
             //    COMMON -> <TOOL_CALLS(history) & TOOL> -> <USER INP> -> SELECT(problematic)
             
             // hardcoded prompt orders & structure, CANNOT change -> Modding needed
@@ -87,26 +89,45 @@ const main = async (): Promise<void> => {
               common: () => [
                 "The user's choice of language is \"${locale}\".",
                 "The user's timezone is: \"${timezone}\".",
-                "There will be an example of the default function you can call.",
               ].join("\n"),
-              // describe: () => "",
+
               select: () => [
-                "Do not call the functions or tools directly,",
-                "use it via the 'selectFunctions' tool call to call any functions.",
-                "Check dependencies between functions before selecting.",
+                "You are an agent that selects functions to call.",
+                "DO NOT generate tool calls or call functions provided previously by `getApiFunctions` directly.",
+                "You must use the supplied `selectFunctions` function every time to just select the functions to call.",
+                // "Tools cannot be called unless `selectFunctions` is called beforehand. Call `selectFunctions` every time with no exceptions."
               ].join("\n"),
-              // execute: () => "",
+
+              execute: () => [
+                "You are an agent that calls the functions provided.",
+                "If message histories lack info to compose all the arguments, ask the user for more information.",
+                "when asking the user to write more information, make the text concise and clear.",
+                // "When calling the function, Make sure it's formatted as JSON.",
+              ].join("\n"),
+
+              describe: () => [
+                "You are an agent describing return values from function calls.",
+                "There should be previous histories of function calls above.",
+                // "When describing the return values, don't summarize or abbreviate them too much.",
+                // "Provide as much detail as possible.",
+                "Format the content in markdown and if needed, use the mermaid syntax for diagrams.",
+                // "If the content includes images, use the markdown image syntax to include them.",
+                "Provide TL;DR of the result in the end."
+              ].join("\n"),
+
               // initialize: () => "",
+
               // cancel: () => "",
             },
 
-            executor: {
+            executor: ollamaExecute<ModelType>({
               select: ollamaSelect,
               call: ollamaCall,
-            },
+            }),
 
             // enable Chain of Thought reasoning
             // (only for ollama's COT supported models)
+            // note: seems broken? in-line commands or other methods needed.
             think: true,
           },
 

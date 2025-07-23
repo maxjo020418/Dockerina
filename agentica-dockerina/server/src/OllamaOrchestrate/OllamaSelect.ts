@@ -95,12 +95,34 @@ async function step<Model extends ILlmSchema.Model>(
   // ----
   const completionStream = await ctx.request("select", {
     messages: [
-      // COMMON SYSTEM PROMPT
+      // PREVIOUS HISTORIES
+      ...ctx.histories.map(factory.decodeHistory).flat(),
+
+      // USER INPUT
       {
-        role: "system",
-        content: constants.AgenticaDefaultPrompt.write(ctx.config),
-      } satisfies OpenAI.ChatCompletionSystemMessageParam,
-      
+        role: "user",
+        content: ctx.prompt.contents.map((c) => {
+          const decoded = factory.decodeUserMessageContent(c);
+          if (
+            typeof decoded === "string" ||
+            (decoded as { type?: string }).type === "text"
+          ) {
+              const text =
+                typeof decoded === "string"
+                  ? decoded
+                  : (decoded as OpenAI.ChatCompletionContentPartText).text;
+            return {
+              ...(typeof decoded === "string" ? {} : decoded),
+              type: "text",
+              text: text 
+                + "\n(If you need to call a function, use it via the `selectFunctions`, follow the function json structure:\n"
+                + "{\"name\": \"selectFunctions\", \"arguments\": {\"functions\": [{\"name\": <func. name>, \"reason\": <reason>}, ...]}}"
+            } satisfies OpenAI.ChatCompletionContentPartText;
+          }
+          return decoded
+        })
+      },
+
       // CANDIDATE FUNCTIONS
       {
         role: "assistant",
@@ -133,14 +155,11 @@ async function step<Model extends ILlmSchema.Model>(
         ),
       },
 
-      // PREVIOUS HISTORIES
-      ...ctx.histories.map(factory.decodeHistory).flat(),
-
-      // USER INPUT
+      // COMMON SYSTEM PROMPT
       {
-        role: "user",
-        content: ctx.prompt.contents.map(factory.decodeUserMessageContent),
-      },
+        role: "system",
+        content: constants.AgenticaDefaultPrompt.write(ctx.config),
+      } satisfies OpenAI.ChatCompletionSystemMessageParam,
 
       // SYSTEM PROMPT
       {
@@ -236,6 +255,7 @@ async function step<Model extends ILlmSchema.Model>(
     }
 
     // ASSISTANT MESSAGE
+    // (LLM's generated message)
     if (
       choice.message.role === "assistant"
       && choice.message.content != null
@@ -245,7 +265,7 @@ async function step<Model extends ILlmSchema.Model>(
         stream: utils.toAsyncGenerator(choice.message.content),
         join: async () => Promise.resolve(choice.message.content!),
         done: () => true,
-        get: () => choice.message.content!,
+        get: () => "## [SELECT AGENT]\n\n" + choice.message.content!, // string
       });
       ctx.dispatch(event);
     }
