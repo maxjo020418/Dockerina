@@ -127,6 +127,7 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
         ctx.dispatch(exec);
         executes.push(exec);
 
+        // Remove from stack due to completion
         if (isAgenticaContext(ctx)) {
           orchestrate.cancelFunctionFromContext(ctx, {
             name: call.operation.name,
@@ -142,7 +143,7 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
     ) {
       const text: string = choice.message.content;
       const event: AgenticaAssistantMessageEvent = factory.creatAssistantMessageEvent({
-        get: () => text,
+        get: () => "## [CALL AGENT]\n\n" + text,
         done: () => true,
         stream: utils.toAsyncGenerator(text),
         join: async () => Promise.resolve(text),

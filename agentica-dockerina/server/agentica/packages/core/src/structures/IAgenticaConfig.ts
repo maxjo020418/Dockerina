@@ -122,8 +122,8 @@ export interface IAgenticaConfig<Model extends ILlmSchema.Model> {
   eliticism?: boolean;
 
   /**
-     * Chain of Thought reasoning.
-     * * @default false
-     */
+   * Chain of Thought reasoning.
+   * * @default false
+   */
   think?: boolean;
 }
