@@ -133,9 +133,11 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
             name: call.operation.name,
             reason: "completed",
           });
+          console.log("[OllamaCall.ts] calling:", call.operation.name)
         }
       }
     }
+    // convert to msg string
     if (
       choice.message.role === "assistant"
       && choice.message.content != null
