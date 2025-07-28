@@ -30,6 +30,8 @@ import type { ILlmSchema } from "@samchon/openapi/lib/structures/ILlmSchema";
 import { ollamaSelect } from "./OllamaOrchestrate/OllamaSelect";
 import { ollamaCall } from "./OllamaOrchestrate/OllamaCall";
 import { ollamaExecute } from "./OllamaOrchestrate/OllamaExecute";
+import { OllamaCancel } from "./OllamaOrchestrate/OllamaCancel";
+import { OllamaDescribe } from "./OllamaOrchestrate/OllamaDescribe";
 
 const getPromptHistories = async (
   id: string,
@@ -45,8 +47,8 @@ const main = async (): Promise<void> => {
 
   // model type here: --------------------------------------
   // "chatgpt" | "claude" | "deepseek" | "gemini" | "llama" | "3.0" | "3.1"
-  type ModelType = Extract<ILlmSchema.Model, "chatgpt">;
-  const modeltype: ModelType = "chatgpt";
+  type ModelType = Extract<ILlmSchema.Model, "deepseek">;
+  const modeltype: ModelType = "deepseek";
   // -------------------------------------------------------
 
   const server: WebSocketServer<
@@ -66,8 +68,8 @@ const main = async (): Promise<void> => {
               apiKey: SGlobal.env.OPENAI_API_KEY, // dummy key
               baseURL: "http://localhost:8000/v1" // http://localhost:11434/v1 for direct call
             }),
-            model: "qwen3:14b" // ollama models (NO QWEN3 SCHEMA YET)
-            //model: "gpt-4o-mini" // chatgpt API
+            model: "qwen3-14b-8k" // ollama models (NO QWEN3 SCHEMA YET)
+            // model: "gpt-4o-mini" // chatgpt API
           },
 
           config: {
@@ -79,7 +81,7 @@ const main = async (): Promise<void> => {
             // ------------------
 
             // prompting order: `.../src/orchestrate/select.ts` is used... (idk why not `initialize.ts`)
-            // [Sysprompt gets prioprity anyways in ChatML, order for 'system' DOES NOT MATTER]
+            // [Sysprompt gets priority anyways in ChatML, order for 'system' DOES NOT MATTER]
             //    COMMON -> <TOOL_CALLS(history) & TOOL> -> <USER INP> -> SELECT(problematic)
             
             // hardcoded prompt orders & structure, CANNOT change -> Modding needed
@@ -93,16 +95,14 @@ const main = async (): Promise<void> => {
 
               select: () => [
                 "You are an agent that selects functions to call.",
-                "DO NOT generate tool calls or call functions provided previously by `getApiFunctions` directly.",
-                "You must use the supplied `selectFunctions` function every time to just select the functions to call.",
-                // "Tools cannot be called unless `selectFunctions` is called beforehand. Call `selectFunctions` every time with no exceptions."
+                // "DO NOT generate tool calls or call functions provided previously by `getApiFunctions` directly.",
+                "Use the supplied `selectFunctions` function to select the functions provided by getApiFunctions.",
               ].join("\n"),
 
-              execute: () => [
+              execute: () => [  // call.ts
                 "You are an agent that calls the functions provided.",
-                "If message histories lack info to compose all the arguments, ask the user for more information.",
-                "when asking the user to write more information, make the text concise and clear.",
-                // "When calling the function, Make sure it's formatted as JSON.",
+                "If the context provided lacks information to create arguments for the function, you must ask the user for more information.",
+                "But if the information is insufficient but you believe you can accurately infer and fill in the parameters or arguments, do so accordingly."
               ].join("\n"),
 
               describe: () => [
@@ -110,25 +110,35 @@ const main = async (): Promise<void> => {
                 "There should be previous histories of function calls above.",
                 // "When describing the return values, don't summarize or abbreviate them too much.",
                 // "Provide as much detail as possible.",
-                "Format the content in markdown and if needed, use the mermaid syntax for diagrams.",
+                // "Format the content in markdown and if needed, use the mermaid syntax for diagrams.",
                 // "If the content includes images, use the markdown image syntax to include them.",
+                "format as markdown",
                 "Provide TL;DR of the result in the end."
               ].join("\n"),
 
-              // initialize: () => "",
+              cancel: () => [
+                "You are a helpful assistant for cancelling functions which are prepared to call.",
+                "Use the supplied tools to select some functions to cancel of `getApiFunctions()` returned.",
+                "If you can't find any proper function to select, don't talk, don't do anything.",
+                ].join("\n"),
 
-              // cancel: () => "",
+              // initialize: () => "",
             },
 
             executor: ollamaExecute<ModelType>({
               select: ollamaSelect,
               call: ollamaCall,
+              cancel: OllamaCancel,
+              describe: OllamaDescribe,
             }),
 
+            // [Custom added parameters] NOTE: seems broken? in-line commands or other methods needed.
             // enable Chain of Thought reasoning
             // (only for ollama's COT supported models)
-            // note: seems broken? in-line commands or other methods needed.
             think: true,
+            // LLM temperature and top_p
+            temperature: 0.6,
+            top_p: 1.0
           },
 
           // le' functions I add

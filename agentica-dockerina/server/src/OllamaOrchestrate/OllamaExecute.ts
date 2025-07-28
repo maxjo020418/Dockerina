@@ -6,13 +6,19 @@ import {
     IAgenticaExecutor
 } from "@agentica/core";
 
-// for default orchestration
-import { orchestrate } from "@agentica/core"
-
 // custom ollama orchestrations
 // needs to be replced if extra custom orchestrations are added
 import { ollamaSelect as select } from "./OllamaSelect";
 import { ollamaCall as call } from "./OllamaCall";
+import { OllamaCancel as cancel } from "./OllamaCancel";
+
+import {
+  // orchestrate
+  initialize,
+  describe,
+
+  cancelFunctionFromContext
+} from "@agentica/core";
 
 export function ollamaExecute<Model extends ILlmSchema.Model>(executor: Partial<IAgenticaExecutor<Model>> | null) {
   return async (ctx: AgenticaContext<Model>): Promise<void> => {
@@ -25,7 +31,7 @@ export function ollamaExecute<Model extends ILlmSchema.Model>(executor: Partial<
         await (
           typeof executor?.initialize === "function"
             ? executor.initialize
-            : orchestrate.initialize
+            : initialize
         )(ctx);
         if (ctx.ready() === false) {
           return;
@@ -38,12 +44,6 @@ export function ollamaExecute<Model extends ILlmSchema.Model>(executor: Partial<
     for (const op of ctx.stack) {
       console.log("\t", op.operation.name);
     }
-    // CANCEL CANDIDATE FUNCTIONS
-    if (ctx.stack.length !== 0) {
-      console.log("[OllamaExecute.ts] `ctx.stack.length` is <", ctx.stack.length, ">, calling cancel.ts");
-      await (executor?.cancel ?? orchestrate.cancel)(ctx);
-    }
-    console.log("[OllamaExecute.ts] cancel complete, `ctx.stack.length` is now <", ctx.stack.length, ">");
 
     // SELECT CANDIDATE FUNCTIONS
     await (executor?.select ?? select)(ctx);
@@ -66,23 +66,29 @@ export function ollamaExecute<Model extends ILlmSchema.Model>(executor: Partial<
         await (
           typeof executor?.describe === "function"
             ? executor.describe
-            : orchestrate.describe
+            : describe
         )(ctx, executes);
       }
       if (executes.length === 0 || ctx.stack.length === 0) {
         console.log("[OllamaExecute.ts] === function calling loop ended ===")
         break;
       }
+      else {
+        // CANCEL CANDIDATE FUNCTIONS
+        console.log("[OllamaExecute.ts] `ctx.stack.length` is <", ctx.stack.length, ">, calling cancel.ts");
+        await (executor?.cancel ?? cancel)(ctx);
+        console.log("[OllamaExecute.ts] cancel complete, `ctx.stack.length` is now <", ctx.stack.length, ">");
+      }
     }
 
     // // Empty stack if function(s) are not used
-    // for (const op of [...ctx.stack]) {  // copy of stack to avoid mutation during iteration
-    //   console.log("[OllamaExecute.ts] removing \"", op.operation.name, "\" from stack.")
-    //   orchestrate.cancelFunctionFromContext(ctx, {
-    //     name: op.operation.name,
-    //     reason: "unused",
-    //   });
-    // }
+    for (const op of [...ctx.stack]) {  // copy of stack to avoid mutation during iteration
+      console.log("[OllamaExecute.ts] removing \"", op.operation.name, "\" from stack.")
+      cancelFunctionFromContext(ctx, {
+        name: op.operation.name,
+        reason: "unused",
+      });
+    }
 
     console.log("[OllamaExecute.ts] END: ctx.stack.length is <", ctx.stack.length, ">");
     console.log("[OllamaExecute.ts] +++++ EXECUTE ENDED +++++")

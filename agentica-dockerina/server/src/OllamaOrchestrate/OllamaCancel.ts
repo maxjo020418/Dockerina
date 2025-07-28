@@ -1,49 +1,41 @@
-// based on agentica-dockerina/server/agentica/packages/core/src/orchestrate/select.ts
-
 import type { ILlmApplication, ILlmSchema } from "@samchon/openapi";
 import type OpenAI from "openai";
 import type { IValidation } from "typia";
 
 import typia from "typia";
 
-import type { 
-  // context
-  AgenticaContext,
-  AgenticaOperation,
-  AgenticaOperationSelection,
+import type {
+    // context
+    AgenticaContext,
+    AgenticaOperation,
+    AgenticaOperationSelection,
 
-  // events
-  AgenticaAssistantMessageEvent,
-  AgenticaSelectEvent,
-  AgenticaEvent,
-} from "@agentica/core";
+    // events
+    AgenticaCancelEvent,
+    AgenticaEvent,
+} from "@agentica/core"
 
+import type { __IChatCancelFunctionsApplication } from "../function-refs/__IChatCancelFunctionsApplication";
+import type { __IChatFunctionReference } from "../function-refs/__IChatFunctionReference";
 
 import {
-  // constants
-  AgenticaConstant,
-  AgenticaDefaultPrompt,
-  AgenticaSystemPrompt,
+    // constants
+    AgenticaConstant,
+    AgenticaDefaultPrompt,
+    AgenticaSystemPrompt,
+    
+    // factory
+    decodeHistory, decodeUserMessageContent,
+    
+    // utils
+    StreamUtil, ChatGptCompletionMessageUtil,
 
-  // factory
-  decodeHistory, decodeUserMessageContent,
-  creatAssistantMessageEvent,
-
-  // utils
-  StreamUtil, toAsyncGenerator,
-  ChatGptCompletionMessageUtil,
-
-  // internal
-  selectFunctionFromContext,
-} from "@agentica/core";
-
-// import { factory, orchestrate, utils, constants } from "@agentica/core"
-
-import type { __IChatFunctionReference } from "../function-refs/__IChatFunctionReference"
-import type { __IChatSelectFunctionsApplication } from "../function-refs/__IChatSelectFunctionsApplication"
+    // orchestrate
+    cancelFunctionFromContext,
+} from "@agentica/core"
 
 const CONTAINER: ILlmApplication<"chatgpt"> = typia.llm.application<
-  __IChatSelectFunctionsApplication,
+  __IChatCancelFunctionsApplication,
   "chatgpt"
 >();
 
@@ -53,7 +45,7 @@ interface IFailure {
   validation: IValidation.IFailure;
 }
 
-export async function ollamaSelect<Model extends ILlmSchema.Model>(
+export async function OllamaCancel<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model>,
 ): Promise<void> {
   if (ctx.operations.divided === undefined) {
@@ -61,7 +53,7 @@ export async function ollamaSelect<Model extends ILlmSchema.Model>(
   }
 
   const stacks: AgenticaOperationSelection<Model>[][]
-    = ctx.operations.divided.map(() => []);
+      = ctx.operations.divided.map(() => []);
   const events: AgenticaEvent<Model>[] = [];
   await Promise.all(
     ctx.operations.divided.map(async (operations, i) =>
@@ -99,9 +91,9 @@ export async function ollamaSelect<Model extends ILlmSchema.Model>(
     );
   }
   else {
-    const selected: AgenticaSelectEvent<Model>[]
-      = events.filter(e => e.type === "select");
-    (selected.length !== 0 ? selected : events)
+    const cancelled: AgenticaCancelEvent<Model>[]
+        = events.filter(e => e.type === "cancel");
+    (cancelled.length !== 0 ? cancelled : events)
       .forEach(ctx.dispatch);
   }
 }
@@ -115,11 +107,13 @@ async function step<Model extends ILlmSchema.Model>(
   // ----
   // EXECUTE CHATGPT API
   // ----
-  const completionStream = await ctx.request("select", {
+  const completionStream = await ctx.request("cancel", {
     messages: [
-      // PREVIOUS HISTORIES
-      ...ctx.histories.map(decodeHistory).flat(),
-
+      // COMMON SYSTEM PROMPT
+      {
+        role: "system",
+        content: AgenticaDefaultPrompt.write(ctx.config),
+      } satisfies OpenAI.ChatCompletionSystemMessageParam,
       // CANDIDATE FUNCTIONS
       {
         role: "assistant",
@@ -151,47 +145,20 @@ async function step<Model extends ILlmSchema.Model>(
           })),
         ),
       },
-
-      // COMMON SYSTEM PROMPT
+      // PREVIOUS HISTORIES
+      ...ctx.histories.map(decodeHistory).flat(),
+      // USER INPUT
       {
-        role: "system",
-        content: AgenticaDefaultPrompt.write(ctx.config),
-      } satisfies OpenAI.ChatCompletionSystemMessageParam,
-
+        role: "user",
+        content: ctx.prompt.contents.map(decodeUserMessageContent),
+      },
       // SYSTEM PROMPT
       {
         role: "system",
         content:
-            ctx.config?.systemPrompt?.select?.(ctx.histories)
-            ?? AgenticaSystemPrompt.SELECT
-        ,
+          ctx.config?.systemPrompt?.cancel?.(ctx.histories)
+          ?? AgenticaSystemPrompt.CANCEL,
       },
-
-      // USER INPUT
-      {
-        role: "user",
-        content: ctx.prompt.contents.map((c) => {
-          const decoded = decodeUserMessageContent(c);
-          if (
-            typeof decoded === "string" ||
-            (decoded as { type?: string }).type === "text"
-          ) {
-              const text =
-                typeof decoded === "string"
-                  ? decoded
-                  : (decoded as OpenAI.ChatCompletionContentPartText).text;
-            return {
-              ...(typeof decoded === "string" ? {} : decoded),
-              type: "text",
-              text: text 
-                + "\n(When calling a function, you must use it via the `selectFunctions` and follow this format: "
-                + "{\"name\": \"selectFunctions\", \"arguments\": {\"functions\": [{\"name\": <function name>, \"reason\": <reason>}, ...]}}"
-            } satisfies OpenAI.ChatCompletionContentPartText;
-          }
-          return decoded
-        })
-      },
-       
       // TYPE CORRECTIONS
       ...emendMessages(failures ?? []),
     ],
@@ -205,7 +172,9 @@ async function step<Model extends ILlmSchema.Model>(
          * @TODO fix it
          * The property and value have a type mismatch, but it works.
          */
-        parameters: CONTAINER.functions[0]!.parameters as unknown as Record<string, unknown>,
+        parameters: (
+          CONTAINER.functions[0]!.parameters as unknown as Record<string, unknown>
+        ),
       },
     } satisfies OpenAI.ChatCompletionTool],
     tool_choice: retry === 0
@@ -216,7 +185,7 @@ async function step<Model extends ILlmSchema.Model>(
             name: CONTAINER.functions[0]!.name,
           },
         },
-    // parallel_tool_calls: false,
+    // parallel_tool_calls: true,
   });
 
   const chunks = await StreamUtil.readAll(completionStream);
@@ -229,9 +198,10 @@ async function step<Model extends ILlmSchema.Model>(
     const failures: IFailure[] = [];
     for (const choice of completion.choices) {
       for (const tc of choice.message.tool_calls ?? []) {
-        if (tc.function.name !== "selectFunctions") {
+        if (tc.function.name !== "cancelFunctions") {
           continue;
         }
+
         const input: object = JSON.parse(tc.function.arguments) as object;
         const validation: IValidation<__IChatFunctionReference.IProps>
           = typia.validate<__IChatFunctionReference.IProps>(input);
@@ -253,43 +223,28 @@ async function step<Model extends ILlmSchema.Model>(
   // PROCESS COMPLETION
   // ----
   for (const choice of completion.choices) {
-    // FUNCTION CALLING
+    // TOOL CALLING HANDLER
     if (choice.message.tool_calls != null) {
       for (const tc of choice.message.tool_calls) {
         if (tc.type !== "function") {
           continue;
         }
-        else if (tc.function.name !== "selectFunctions") {
+        else if (tc.function.name !== "cancelFunctions") {
           continue;
         }
 
         const input: __IChatFunctionReference.IProps | null
-          = typia.json.isParse<__IChatFunctionReference.IProps>(
-            tc.function.arguments,
-          );
+          = typia.json.isParse<
+            __IChatFunctionReference.IProps
+          >(tc.function.arguments);
         if (input === null) {
           continue;
         }
+
         for (const reference of input.functions) {
-          selectFunctionFromContext(ctx, reference);
+          cancelFunctionFromContext(ctx, reference);
         }
       }
-    }
-
-    // ASSISTANT MESSAGE
-    // (LLM's generated message)
-    if (
-      choice.message.role === "assistant"
-      && choice.message.content != null
-      && choice.message.content.length !== 0
-    ) {
-      const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
-        stream: toAsyncGenerator(choice.message.content),
-        join: async () => Promise.resolve(choice.message.content!),
-        done: () => true,
-        get: () => "## [SELECT AGENT]\n\n" + choice.message.content!, // string
-      });
-      ctx.dispatch(event);
     }
   }
 }
@@ -297,31 +252,31 @@ async function step<Model extends ILlmSchema.Model>(
 function emendMessages(failures: IFailure[]): OpenAI.ChatCompletionMessageParam[] {
   return failures
     .map(f => [
-      {
-        role: "assistant",
-        tool_calls: [
-          {
-            type: "function",
-            id: f.id,
-            function: {
-              name: f.name,
-              arguments: JSON.stringify(f.validation.data),
+        {
+          role: "assistant",
+          tool_calls: [
+            {
+              type: "function",
+              id: f.id,
+              function: {
+                name: f.name,
+                arguments: JSON.stringify(f.validation.data),
+              },
             },
-          },
-        ],
-      } satisfies OpenAI.ChatCompletionAssistantMessageParam,
-      {
-        role: "tool",
-        content: JSON.stringify(f.validation.errors),
-        tool_call_id: f.id,
-      } satisfies OpenAI.ChatCompletionToolMessageParam,
-      {
-        role: "system",
-        content: [
-          "Function calling arguments are not valid or has the wrong type.",
-          "Call the function again with the corrected arguments.",
-        ].join("\n"),
-      } satisfies OpenAI.ChatCompletionSystemMessageParam,
+          ],
+        } satisfies OpenAI.ChatCompletionAssistantMessageParam,
+        {
+          role: "tool",
+          content: JSON.stringify(f.validation.errors),
+          tool_call_id: f.id,
+        } satisfies OpenAI.ChatCompletionToolMessageParam,
+        {
+          role: "system",
+          content: [
+            "The arguments of the function is not valid.",
+            "Correct the function call and try again.",
+          ].join("\n"),
+        } satisfies OpenAI.ChatCompletionSystemMessageParam,
     ])
     .flat();
 }

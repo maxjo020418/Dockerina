@@ -9,8 +9,13 @@ pnpm start
 
 # full rebuild
 pnpm --filter @agentica/core --filter @agentica/rpc build && pnpm build && pnpm start
-# partial (core) rebuild
+# core rebuild
 pnpm --filter @agentica/core build && pnpm build && pnpm start
+
+# debug via curl
+curl http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d @[payload].json
 ```
 
 ## Changes
@@ -33,7 +38,7 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 
 ### Problems
 
-1. `histories.map(decodeHistory).flat()`@`/agentica/packages/core/src/orchestrate/describe.ts`: if function call history is empty, the prompt becomes like: (in ChatML)
+1. **\[RESOLVING - (may just be a prompt fix.)\]** `histories.map(decodeHistory).flat()`@`/agentica/packages/core/src/orchestrate/describe.ts`: if function call history is empty, the prompt becomes like: (in ChatML)
     ```text
     The user's choice of language is "English".
     The user's timezone is: "Asia/Seoul".
@@ -43,16 +48,18 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 
     Above messages are the list of function call histories. When describing the return values, please do not too much shortly summarize them. Instead, provide detailed descriptions as much as.
     ```
+    in raw ChatML, sysprompts are not ordered the same use chat histories. The default prompt is in an odd position. (**Prompt sentence has been changed from the above default.**)
     which can/might confuse the model, needs smth like `if len(histories) <= 0 then "different prompt"`
 
-2. ~~multiple `<think>` blocks being returned when running function calls are not reflected in json history payload. Only the first block is included in the context. Add the whole process to history or just the last one if context size needs to be reduced.~~
-<u>**Edit**: only the calls from `describe.ts` doesn't seem to be included.</u>
+2. responses from `describe.ts` doesn't seem to be included in history. **Function call histories are provided to agents** BUT follow-up actions and error/problems reported by `describe.ts` is not conveyed which causes problems.
 
-3. ~~broken function calls being filtered by ollama and ending the thinking process.~~ (**Edit**: Issue mostly resolved and also Ollama team working on fix.) Also, Multiple function calls in some cases.
+3. **\*\(check notes)[RESOLVED\]** (mostly I think) Multiple function calls in some cases.
+
+3. **\[RESOLVED\]** ~~broken function calls being filtered by ollama and ending the thinking process.~~ (**Edit**: Issue mostly resolved and also Ollama team working on fix.) 
 
 4. **\[RESOLVED\]** <u>`getApiFunctions` getting cut out when chat gets too long (out of context window), include in sysprompt or put it at last.</u>
 
-**Interaction notes for \#3: (Problematic ones - function being called multiple times)**
+<u>**Interaction notes for \#3: (Problematic ones - function being called multiple times)**</u>
 
 1. user > "what can you do?"
 2. selector > "I should use `selectFunctions` to get all function's infoi" > calls all known functions (eg: bbs list, create, update, erase) via `selectFunctions`
@@ -61,9 +68,11 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
     {\"name\": \"selectFunctions\", \"arguments\": {\"functions\": [{\"name\": \"index\ \"reason\": \"To list all articles available in the BBS DB.\"}, {\"name\": \"create\ \"reason\": \"To allow the user to write and archive a new article.\"}, {\"name\": \"update\ \"reason\": \"To enable modification of an existing article's content.\"}, {\"name\": \"erase\ \"reason\": \"To provide the capability to delete an article from the database.\"}]}}
     ```
 3. all functions mentioned above is stored in `ctx.stack`, which is passed onto `call.ts` inside `<tools>`.
-4. **`cancel.ts` is expected to cancel unused functions and `call.ts` is supposed to call all functions in `ctx.stack`.** (cancelling and calling the functions remove them from `ctx.stack`) But in some cases, `call.ts` doesn't cancel(all unused) or doesn't call(or fails to call) all the functions. `ctx.stack` is NOT emptied every 'turn' so it'll have a bug where prev. function stacks is called (via `call.ts`) confusing the whole model.
+4. **`cancel.ts` is expected to cancel unused functions and `call.ts` is supposed to call all functions in `ctx.stack`.** (cancelling and calling the functions remove them from `ctx.stack`) But in some cases, `call.ts` doesn't cancel(all unused) or doesn't call(or fails to call) all the functions. `ctx.stack` is NOT emptied every 'turn' so it'll have a bug where prev. function stacks is called (via `call.ts`) confusing the function executions (running functions unprompted).
 
 > extra prompt logic needs to be added OR `executes.length === 0` @ `OllamaExecute.ts` conditional needs to be removed (any attempt to call the function removes it from `ctx.stack`) OR just empty `ctx.stack` every turn
+
+> also, if it were to work WITHOUT emptying `ctx.stack`, tool call/response history should be added at every loop (in the fcall loop). which seems like it isn't being done properly 
 
 ## Notes
 

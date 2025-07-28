@@ -13,18 +13,43 @@ import {
   LlmTypeCheckerV3_1,
 } from "@samchon/openapi";
 
-import {
-    AgenticaContext,
-    AgenticaOperation,
-    // MicroAgenticaContext, // don't think it's gonna be used
-    AgenticaAssistantMessageEvent,
-    AgenticaExecuteEvent,
-    AgenticaCallEvent,
-    MicroAgenticaHistory,
-    isAgenticaContext
+import type {
+  // context
+  AgenticaContext,
+  AgenticaOperation,
+  // MicroAgenticaContext, // unused
+
+  // events
+  AgenticaAssistantMessageEvent,
+  AgenticaExecuteEvent,
+  AgenticaCallEvent,
+
+  // histories
+  MicroAgenticaHistory,
 } from "@agentica/core";
 
-import { factory, orchestrate, utils, constants } from "@agentica/core"
+import {
+  // constants
+  AgenticaConstant,
+  AgenticaDefaultPrompt,
+  AgenticaSystemPrompt,
+
+  // context
+  isAgenticaContext,
+
+  // factory/events
+  creatAssistantMessageEvent, createCallEvent, createExecuteEvent, createValidateEvent,
+  // factory/histories
+  decodeHistory, decodeUserMessageContent,
+
+  // utils
+  ChatGptCompletionMessageUtil,
+  StreamUtil,
+  toAsyncGenerator,
+
+  // internal
+  cancelFunctionFromContext,
+} from "@agentica/core";
 
 export async function ollamaCall<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model>, // | MicroAgenticaContext<Model>,
@@ -38,14 +63,32 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
       // COMMON SYSTEM PROMPT
       {
         role: "system",
-        content: constants.AgenticaDefaultPrompt.write(ctx.config),
+        content: AgenticaDefaultPrompt.write(ctx.config),
       } satisfies OpenAI.ChatCompletionSystemMessageParam,
       // PREVIOUS HISTORIES
-      ...ctx.histories.map(factory.decodeHistory).flat(),
+      ...ctx.histories.map(decodeHistory).flat(),
       // USER INPUT
       {
         role: "user",
-        content: ctx.prompt.contents.map(factory.decodeUserMessageContent),
+        content: ctx.prompt.contents.map((c) => {
+          const decoded = decodeUserMessageContent(c);
+          if (
+            typeof decoded === "string" ||
+            (decoded as { type?: string }).type === "text"
+          ) {
+              const text =
+                typeof decoded === "string"
+                  ? decoded
+                  : (decoded as OpenAI.ChatCompletionContentPartText).text;
+            return {
+              ...(typeof decoded === "string" ? {} : decoded),
+              type: "text",
+              text: text 
+                + "\n(When calling a function, don't forget any parameters.)"
+            } satisfies OpenAI.ChatCompletionContentPartText;
+          }
+          return decoded
+        })
       },
       // SYSTEM PROMPT
       ...(ctx.config?.systemPrompt?.execute === null
@@ -53,7 +96,7 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
         : [{
           role: "system",
           content: ctx.config?.systemPrompt?.execute?.(ctx.histories as MicroAgenticaHistory<Model>[])
-            ?? constants.AgenticaSystemPrompt.EXECUTE,
+            ?? AgenticaSystemPrompt.EXECUTE,
         } satisfies OpenAI.ChatCompletionSystemMessageParam]),
     ],
     // STACKED FUNCTIONS
@@ -90,8 +133,8 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
   // ----
   // PROCESS COMPLETION
   // ----
-  const chunks = await utils.StreamUtil.readAll(completionStream);
-  const completion = utils.ChatGptCompletionMessageUtil.merge(chunks);
+  const chunks = await StreamUtil.readAll(completionStream);
+  const completion = ChatGptCompletionMessageUtil.merge(chunks);
   const executes: AgenticaExecuteEvent<Model>[] = [];
 
   for (const choice of completion.choices) {
@@ -102,7 +145,7 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
         if (operation === undefined) {
           continue;
         }
-        const call: AgenticaCallEvent<Model> = factory.createCallEvent({
+        const call: AgenticaCallEvent<Model> = createCallEvent({
           id: tc.id,
           operation,
           // @TODO add type assertion!
@@ -129,7 +172,7 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
 
         // Remove from stack due to completion
         if (isAgenticaContext(ctx)) {
-          orchestrate.cancelFunctionFromContext(ctx, {
+          cancelFunctionFromContext(ctx, {
             name: call.operation.name,
             reason: "completed",
           });
@@ -144,10 +187,10 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
       && choice.message.content.length !== 0
     ) {
       const text: string = choice.message.content;
-      const event: AgenticaAssistantMessageEvent = factory.creatAssistantMessageEvent({
+      const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
         get: () => "## [CALL AGENT]\n\n" + text,
         done: () => true,
-        stream: utils.toAsyncGenerator(text),
+        stream: toAsyncGenerator(text),
         join: async () => Promise.resolve(text),
       });
       ctx.dispatch(event);
@@ -195,14 +238,14 @@ async function propagateHttp<Model extends ILlmSchema.Model>(
   );
   if (check.success === false) {
     props.ctx.dispatch(
-      factory.createValidateEvent({
+      createValidateEvent({
         id: props.call.id,
         operation: props.operation,
         result: check,
       }),
     );
 
-    if (props.retry++ < (props.ctx.config?.retry ?? constants.AgenticaConstant.RETRY)) {
+    if (props.retry++ < (props.ctx.config?.retry ?? AgenticaConstant.RETRY)) {
       const trial: AgenticaExecuteEvent<Model> | null = await correct(
         props.ctx,
         props.call,
@@ -223,14 +266,14 @@ async function propagateHttp<Model extends ILlmSchema.Model>(
           = ((response.status === 400
             || response.status === 404
             || response.status === 422)
-          && props.retry++ < (props.ctx.config?.retry ?? constants.AgenticaConstant.RETRY)
+          && props.retry++ < (props.ctx.config?.retry ?? AgenticaConstant.RETRY)
           && typeof response.body) === false;
       // DISPATCH EVENT
     return (
       (success === false
         ? await correct(props.ctx, props.call, props.retry, response.body)
         : null)
-      ?? factory.createExecuteEvent({
+      ?? createExecuteEvent({
         operation: props.call.operation,
         arguments: props.call.arguments,
         value: response,
@@ -239,7 +282,8 @@ async function propagateHttp<Model extends ILlmSchema.Model>(
   }
   catch (error) {
     // DISPATCH ERROR
-    return factory.createExecuteEvent({
+    
+    return createExecuteEvent({
       operation: props.call.operation,
       arguments: props.call.arguments,
       value: {
@@ -273,17 +317,17 @@ async function propagateClass<Model extends ILlmSchema.Model>(props: {
   );
   if (check.success === false) {
     props.ctx.dispatch(
-      factory.createValidateEvent({
+      createValidateEvent({
         id: props.call.id,
         operation: props.call.operation,
         result: check,
       }),
     );
     return (
-      (props.retry++ < (props.ctx.config?.retry ?? constants.AgenticaConstant.RETRY)
+      (props.retry++ < (props.ctx.config?.retry ?? AgenticaConstant.RETRY)
         ? await correct(props.ctx, props.call, props.retry, check.errors)
         : null)
-      ?? factory.createExecuteEvent({
+      ?? createExecuteEvent({
         operation: props.call.operation,
         arguments: props.call.arguments,
         value: {
@@ -297,14 +341,15 @@ async function propagateClass<Model extends ILlmSchema.Model>(props: {
   // EXECUTE FUNCTION
   try {
     const value = await executeClassOperation(props.operation, props.call.arguments);
-    return factory.createExecuteEvent({
+    return createExecuteEvent({
       operation: props.call.operation,
       arguments: props.call.arguments,
       value,
     });
   }
   catch (error) {
-    return factory.createExecuteEvent({
+    console.log("[OllamaCall.ts] propagateClass error");
+    return createExecuteEvent({
       operation: props.call.operation,
       arguments: props.call.arguments,
       value:
@@ -331,14 +376,14 @@ async function propagateMcp<Model extends ILlmSchema.Model>(props: {
   // @TODO: implement argument validation logic
   try {
     const value = await executeMcpOperation(props.operation, props.call.arguments);
-    return factory.createExecuteEvent({
+    return createExecuteEvent({
       operation: props.call.operation,
       arguments: props.call.arguments,
       value,
     });
   }
   catch (error) {
-    return factory.createExecuteEvent({
+    return createExecuteEvent({
       operation: props.call.operation,
       arguments: props.call.arguments,
       value:
@@ -413,14 +458,14 @@ async function correct<Model extends ILlmSchema.Model>(
       // COMMON SYSTEM PROMPT
       {
         role: "system",
-        content: constants.AgenticaDefaultPrompt.write(ctx.config),
+        content: AgenticaDefaultPrompt.write(ctx.config),
       } satisfies OpenAI.ChatCompletionSystemMessageParam,
       // PREVIOUS HISTORIES
-      ...ctx.histories.map(factory.decodeHistory).flat(),
+      ...ctx.histories.map(decodeHistory).flat(),
       // USER INPUT
       {
         role: "user",
-        content: ctx.prompt.contents.map(factory.decodeUserMessageContent),
+        content: ctx.prompt.contents.map(decodeUserMessageContent),
       },
       // TYPE CORRECTION
       ...(ctx.config?.systemPrompt?.execute === null
@@ -429,7 +474,7 @@ async function correct<Model extends ILlmSchema.Model>(
           role: "system",
           content:
           ctx.config?.systemPrompt?.execute?.(ctx.histories as MicroAgenticaHistory<Model>[])
-          ?? constants.AgenticaSystemPrompt.EXECUTE,
+          ?? AgenticaSystemPrompt.EXECUTE,
         } satisfies OpenAI.ChatCompletionSystemMessageParam]
       ),
       {
@@ -453,9 +498,8 @@ async function correct<Model extends ILlmSchema.Model>(
       {
         role: "system",
         content: [
-          "You A.I. assistant has composed wrong arguments.",
-          "",
-          "Correct it at the next function calling.",
+          "Function calling arguments are not valid or has the wrong type.",
+          "Call the function again with the corrected arguments.",
         ].join("\n"),
       },
     ],
@@ -497,8 +541,8 @@ async function correct<Model extends ILlmSchema.Model>(
     // parallel_tool_calls: false,
   });
 
-  const chunks = await utils.StreamUtil.readAll(completionStream);
-  const completion = utils.ChatGptCompletionMessageUtil.merge(chunks);
+  const chunks = await StreamUtil.readAll(completionStream);
+  const completion = ChatGptCompletionMessageUtil.merge(chunks);
 
   // ----
   // PROCESS COMPLETION
@@ -514,7 +558,7 @@ async function correct<Model extends ILlmSchema.Model>(
   }
   return propagate(
     ctx,
-    factory.createCallEvent({
+    createCallEvent({
       id: toolCall.id,
       operation: call.operation,
       arguments: JSON.parse(toolCall.function.arguments) as Record<string, unknown>,

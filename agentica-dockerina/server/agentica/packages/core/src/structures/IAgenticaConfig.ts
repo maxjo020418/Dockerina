@@ -122,8 +122,20 @@ export interface IAgenticaConfig<Model extends ILlmSchema.Model> {
   eliticism?: boolean;
 
   /**
-   * Chain of Thought reasoning.
+   * Chain of Thought reasoning. (added for ollama)
    * * @default false
    */
   think?: boolean;
+
+  /**
+   * Model temperature.
+   * * @default false
+   */
+  temperature?: number;
+
+  /**
+   * Model top p.
+   * * @default false
+   */
+  top_p?: number;
 }

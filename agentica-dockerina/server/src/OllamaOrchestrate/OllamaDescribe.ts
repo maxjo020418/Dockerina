@@ -1,0 +1,125 @@
+import type { ILlmSchema } from "@samchon/openapi";
+import type OpenAI from "openai";
+
+import type {
+    // context
+    AgenticaContext,
+    MicroAgenticaContext,
+
+    // events
+    AgenticaDescribeEvent,
+
+    // histories
+    AgenticaExecuteHistory,
+} from "@agentica/core"
+
+import {
+    // constants
+    AgenticaDefaultPrompt,
+    AgenticaSystemPrompt,
+
+    // factory
+    createDescribeEvent,
+    decodeHistory,
+
+    // utils
+    ChatGptCompletionMessageUtil,
+    MPSC,
+    streamDefaultReaderToAsyncGenerator, StreamUtil,
+} from "@agentica/core"
+
+export async function OllamaDescribe<Model extends ILlmSchema.Model>(
+  ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>,
+  histories: AgenticaExecuteHistory<Model>[],
+): Promise<void> {
+  if (histories.length === 0) {
+    return;
+  }
+
+  const completionStream = await ctx.request("describe", {
+    messages: [
+      // COMMON SYSTEM PROMPT
+      {
+        role: "system",
+        content: AgenticaDefaultPrompt.write(ctx.config),
+      } satisfies OpenAI.ChatCompletionSystemMessageParam,
+      // FUNCTION CALLING HISTORIES
+      ...histories.map(decodeHistory).flat(),
+      // SYSTEM PROMPT
+      {
+        role: "system",
+        content:
+          ctx.config?.systemPrompt?.describe?.(histories)
+          ?? AgenticaSystemPrompt.DESCRIBE,
+      },
+    ],
+  });
+
+  const describeContext: ({
+    content: string;
+    mpsc: MPSC<string>;
+  })[] = [];
+
+  await StreamUtil.reduce<
+    OpenAI.ChatCompletionChunk,
+    Promise<OpenAI.ChatCompletion>
+  >(completionStream, async (accPromise, chunk) => {
+    const acc = await accPromise;
+    const registerContext = (
+      choices: OpenAI.ChatCompletionChunk.Choice[],
+    ) => {
+      for (const choice of choices) {
+        /**
+         * @TODO fix it
+         * Sometimes, the complete message arrives along with a finish reason.
+         */
+        if (choice.finish_reason != null) {
+          describeContext[choice.index]!.mpsc.close();
+          continue;
+        }
+
+        if (choice.delta.content == null) {
+          continue;
+        }
+
+        if (describeContext[choice.index] != null) {
+          describeContext[choice.index]!.content += choice.delta.content;
+          describeContext[choice.index]!.mpsc.produce(choice.delta.content);
+          continue;
+        }
+
+        const mpsc = new MPSC<string>();
+
+        describeContext[choice.index] = {
+          content: choice.delta.content,
+          mpsc,
+        };
+        mpsc.produce(choice.delta.content);
+
+        const event: AgenticaDescribeEvent<Model> = createDescribeEvent({
+          executes: histories,
+          stream: streamDefaultReaderToAsyncGenerator(mpsc.consumer.getReader()),
+          done: () => mpsc.done(),
+          get: () => "## [DESCRIBE AGENT]\n\n" + (describeContext[choice.index]?.content ?? ""),
+          join: async () => {
+            await mpsc.waitClosed();
+            return describeContext[choice.index]!.content;
+          },
+        });
+        ctx.dispatch(event);
+      }
+    };
+
+    if (acc.object === "chat.completion.chunk") {
+      registerContext([acc, chunk].flatMap(v => v.choices));
+      return ChatGptCompletionMessageUtil.merge([acc, chunk]);
+    }
+
+    registerContext(chunk.choices);
+    return ChatGptCompletionMessageUtil.accumulate(acc, chunk);
+  });
+}
+
+export const ChatGptDescribeFunctionAgent = {
+  execute: OllamaDescribe,
+};

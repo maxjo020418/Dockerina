@@ -5,4 +5,5 @@ export * from "./AgenticaOperationSelection";
 export * from "./AgenticaTokenUsage";
 
 // added
+export * from "./MicroAgenticaContext"
 export * from "./internal/isAgenticaContext";
