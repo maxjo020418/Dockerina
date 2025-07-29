@@ -28,7 +28,7 @@ import {
     streamDefaultReaderToAsyncGenerator, StreamUtil,
 } from "@agentica/core"
 
-export async function OllamaDescribe<Model extends ILlmSchema.Model>(
+export async function ollamaDescribe<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>,
   histories: AgenticaExecuteHistory<Model>[],
 ): Promise<void> {
@@ -121,5 +121,5 @@ export async function OllamaDescribe<Model extends ILlmSchema.Model>(
 }
 
 export const ChatGptDescribeFunctionAgent = {
-  execute: OllamaDescribe,
+  execute: ollamaDescribe,
 };
