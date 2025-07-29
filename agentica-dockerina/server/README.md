@@ -13,7 +13,7 @@ pnpm --filter @agentica/core --filter @agentica/rpc build && pnpm build && pnpm 
 pnpm --filter @agentica/core build && pnpm build && pnpm start
 
 # debug via curl
-curl http://localhost:11434/v1/chat/completions \
+curl http://[address]:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d @[payload].json
 ```

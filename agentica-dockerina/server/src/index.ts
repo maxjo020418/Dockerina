@@ -1,8 +1,6 @@
 /*
 NOTES:
 @agentica from separate branch!
-
-> pnpm build && pnpm start
 */
 
 import { 
@@ -47,8 +45,8 @@ const main = async (): Promise<void> => {
 
   // model type here: --------------------------------------
   // "chatgpt" | "claude" | "deepseek" | "gemini" | "llama" | "3.0" | "3.1"
-  type ModelType = Extract<ILlmSchema.Model, "deepseek">;
-  const modeltype: ModelType = "deepseek";
+  type ModelType = Extract<ILlmSchema.Model, "chatgpt">;
+  const modeltype: ModelType = "chatgpt";
   // -------------------------------------------------------
 
   const server: WebSocketServer<
@@ -66,14 +64,21 @@ const main = async (): Promise<void> => {
           vendor: {
             api: new OpenAI({ 
               apiKey: SGlobal.env.OPENAI_API_KEY, // dummy key
-              baseURL: "http://localhost:8000/v1" // http://localhost:11434/v1 for direct call
+              /*
+              :11434/v1 for direct call, :8000/v1 for debug shim
+              - localhost
+              - sylph.yeongmin.net // local DNS
+              - sylph-wsl.ragdoll-ule.ts.net // tailscale
+              */
+              baseURL: "http://localhost:8000/v1"
             }),
-            model: "qwen3-14b-8k" // ollama models (NO QWEN3 SCHEMA YET)
+            model: "qwen3-14b-4k" // ollama models (NO QWEN3 SCHEMA YET)
             // model: "gpt-4o-mini" // chatgpt API
           },
 
           config: {
-            // just inserted into prompt, don't need to specify BCP-47 format
+            // local/TZ is just inserted into prompt, 
+            // don't need to comply to specific formats
             // only used for AgenticaSystemPrompt.COMMON
             // ------------------
             locale: "English",

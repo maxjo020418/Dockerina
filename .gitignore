@@ -1,3 +1,7 @@
+.vscode
+.idea
+pnpm-lock.yaml
+
 # PYTHON
 
 # Byte-compiled / optimized / DLL files
