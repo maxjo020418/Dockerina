@@ -80,12 +80,13 @@ const main = async (): Promise<void> => {
             // timezone: "",
             // ------------------
 
-            // prompting order: `.../src/orchestrate/select.ts` is used... (idk why not `initialize.ts`)
-            // [Sysprompt gets priority anyways in ChatML, order for 'system' DOES NOT MATTER]
-            //    COMMON -> <TOOL_CALLS(history) & TOOL> -> <USER INP> -> SELECT(problematic)
+            /* prompting order: `.../src/orchestrate/select.ts` is used... (idk why not `initialize.ts`)
+            [Sysprompt gets priority anyways in ChatML, order for 'system' DOES NOT MATTER]
+              COMMON -> <TOOL_CALLS(history) & TOOL> -> <USER INP> -> SELECT(problematic)
             
-            // hardcoded prompt orders & structure, CANNOT change -> Modding needed
-            // @ agentica/packages/core/src/orchestrate
+            hardcoded prompt orders & structure, CANNOT change -> Modding needed
+            @ agentica/packages/core/src/orchestrate
+            */
 
             systemPrompt: {
               common: () => [

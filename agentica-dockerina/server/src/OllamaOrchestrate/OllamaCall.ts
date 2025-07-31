@@ -51,6 +51,8 @@ import {
   cancelFunctionFromContext,
 } from "@agentica/core";
 
+import { parseThinkToBlockquote } from "../utils/thinkParser";
+
 export async function ollamaCall<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model>, // | MicroAgenticaContext<Model>,
   operations: AgenticaOperation<Model>[],
@@ -188,7 +190,7 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
     ) {
       const text: string = choice.message.content;
       const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
-        get: () => "## [CALL AGENT]\n\n" + text,
+        get: () => "## *CALL AGENT*\n\n" + parseThinkToBlockquote(text),
         done: () => true,
         stream: toAsyncGenerator(text),
         join: async () => Promise.resolve(text),
