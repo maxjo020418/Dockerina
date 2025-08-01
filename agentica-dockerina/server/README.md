@@ -53,13 +53,18 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 
 2. responses from `describe.ts` doesn't seem to be included in history. **Function call histories are provided to agents** BUT follow-up actions and error/problems reported by `describe.ts` is not conveyed which causes problems.
 
-3. **\*\(check notes)[RESOLVED\]** (mostly I think) Multiple function calls in some cases.
+3. **\*\[RESOLVED\] - (check notes)** (mostly I think) Multiple function calls in some cases.
 
-4. **\[RESOLVED\]** ~~broken function calls being filtered by ollama and ending the thinking process.~~ (**Edit**: Issue mostly resolved and also Ollama team working on fix.) 
+4. **\[RESOLVED\]** ~~broken function calls being filtered by ollama and ending the thinking process.~~ (**Edit**: Issue mostly resolved via prompting and also Ollama team working on fix.) 
 
 5. **\[RESOLVED\]** <u>`getApiFunctions` getting cut out when chat gets too long (out of context window), include in sysprompt or put it at last.</u>
 
-6. `<tool_response>` is too long, (exceeding context window size) <u>top level `output` field might be okay to purge during prompt</u>:
+6. **\[RESOLVED\] - (`stripThink` @ `agentica-dockerina/server/agentica/packages/core/src/factory/histories.ts`)** remove `<think>` tagged content from history (mostly irrelevant and massively fills up context window)
+
+7. **\[RESOLVED\] - (`parseThinkToBlockquote` @ `agentica-dockerina/client/src/components/chat/ChatMessage.tsx`)**
+  alongside no.6, format the content including `<think>` to seeprate from regular response
+
+8. `<tool_response>` is too long, (exceeding context window size) <u>top level `output` field might be okay to purge during prompt</u>:
 ```json
 {
   "function": {

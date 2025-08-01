@@ -28,7 +28,7 @@ import {
     streamDefaultReaderToAsyncGenerator, StreamUtil,
 } from "@agentica/core"
 
-import { parseThinkToBlockquote } from "../utils/thinkParser";
+// import { parseThinkToBlockquote } from "../utils/thinkParser";
 
 export async function ollamaDescribe<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>,
@@ -103,7 +103,7 @@ export async function ollamaDescribe<Model extends ILlmSchema.Model>(
           stream: streamDefaultReaderToAsyncGenerator(mpsc.consumer.getReader()),
           done: () => mpsc.done(),
           get: () => "## *DESCRIBE AGENT*\n\n" 
-            + (parseThinkToBlockquote(describeContext[choice.index]?.content) ?? ""),
+            + (describeContext[choice.index]?.content ?? ""),
           join: async () => {
             await mpsc.waitClosed();
             return describeContext[choice.index]!.content;

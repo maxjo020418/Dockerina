@@ -37,7 +37,7 @@ import {
   selectFunctionFromContext,
 } from "@agentica/core";
 
-import { parseThinkToBlockquote } from "../utils/thinkParser";
+// import { parseThinkToBlockquote } from "../utils/thinkParser";
 
 import type { __IChatFunctionReference } from "../function-refs/__IChatFunctionReference"
 import type { __IChatSelectFunctionsApplication } from "../function-refs/__IChatSelectFunctionsApplication"
@@ -287,7 +287,7 @@ async function step<Model extends ILlmSchema.Model>(
         stream: toAsyncGenerator(choice.message.content),
         join: async () => Promise.resolve(choice.message.content!),
         done: () => true,
-        get: () => "## *SELECT AGENT*\n\n" + parseThinkToBlockquote(choice.message.content!), // string
+        get: () => "## *SELECT AGENT*\n\n" + choice.message.content!, // string
       });
       ctx.dispatch(event);
     }
