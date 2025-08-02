@@ -28,7 +28,9 @@ import {
     streamDefaultReaderToAsyncGenerator, StreamUtil,
 } from "@agentica/core"
 
-export async function OllamaDescribe<Model extends ILlmSchema.Model>(
+// import { parseThinkToBlockquote } from "../utils/thinkParser";
+
+export async function ollamaDescribe<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>,
   histories: AgenticaExecuteHistory<Model>[],
 ): Promise<void> {
@@ -100,7 +102,8 @@ export async function OllamaDescribe<Model extends ILlmSchema.Model>(
           executes: histories,
           stream: streamDefaultReaderToAsyncGenerator(mpsc.consumer.getReader()),
           done: () => mpsc.done(),
-          get: () => "## [DESCRIBE AGENT]\n\n" + (describeContext[choice.index]?.content ?? ""),
+          get: () => "## *DESCRIBE AGENT*\n\n" 
+            + (describeContext[choice.index]?.content ?? ""),
           join: async () => {
             await mpsc.waitClosed();
             return describeContext[choice.index]!.content;
@@ -121,5 +124,5 @@ export async function OllamaDescribe<Model extends ILlmSchema.Model>(
 }
 
 export const ChatGptDescribeFunctionAgent = {
-  execute: OllamaDescribe,
+  execute: ollamaDescribe,
 };

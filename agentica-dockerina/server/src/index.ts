@@ -28,8 +28,8 @@ import type { ILlmSchema } from "@samchon/openapi/lib/structures/ILlmSchema";
 import { ollamaSelect } from "./OllamaOrchestrate/OllamaSelect";
 import { ollamaCall } from "./OllamaOrchestrate/OllamaCall";
 import { ollamaExecute } from "./OllamaOrchestrate/OllamaExecute";
-import { OllamaCancel } from "./OllamaOrchestrate/OllamaCancel";
-import { OllamaDescribe } from "./OllamaOrchestrate/OllamaDescribe";
+import { ollamaCancel } from "./OllamaOrchestrate/OllamaCancel";
+import { ollamaDescribe } from "./OllamaOrchestrate/OllamaDescribe";
 
 const getPromptHistories = async (
   id: string,
@@ -85,12 +85,13 @@ const main = async (): Promise<void> => {
             // timezone: "",
             // ------------------
 
-            // prompting order: `.../src/orchestrate/select.ts` is used... (idk why not `initialize.ts`)
-            // [Sysprompt gets priority anyways in ChatML, order for 'system' DOES NOT MATTER]
-            //    COMMON -> <TOOL_CALLS(history) & TOOL> -> <USER INP> -> SELECT(problematic)
+            /* prompting order: `.../src/orchestrate/select.ts` is used... (idk why not `initialize.ts`)
+            [Sysprompt gets priority anyways in ChatML, order for 'system' DOES NOT MATTER]
+              COMMON -> <TOOL_CALLS(history) & TOOL> -> <USER INP> -> SELECT(problematic)
             
-            // hardcoded prompt orders & structure, CANNOT change -> Modding needed
-            // @ agentica/packages/core/src/orchestrate
+            hardcoded prompt orders & structure, CANNOT change -> Modding needed
+            @ agentica/packages/core/src/orchestrate
+            */
 
             systemPrompt: {
               common: () => [
@@ -122,7 +123,7 @@ const main = async (): Promise<void> => {
               ].join("\n"),
 
               cancel: () => [
-                "You are a helpful assistant for cancelling functions which are prepared to call.",
+                "You are an agent for cancelling functions which are prepared to call.",
                 "Use the supplied tools to select some functions to cancel of `getApiFunctions()` returned.",
                 "If you can't find any proper function to select, don't talk, don't do anything.",
                 ].join("\n"),
@@ -133,8 +134,8 @@ const main = async (): Promise<void> => {
             executor: ollamaExecute<ModelType>({
               select: ollamaSelect,
               call: ollamaCall,
-              cancel: OllamaCancel,
-              describe: OllamaDescribe,
+              cancel: ollamaCancel,
+              describe: ollamaDescribe,
             }),
 
             // [Custom added parameters] NOTE: seems broken? in-line commands or other methods needed.

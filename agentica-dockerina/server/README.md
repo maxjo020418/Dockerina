@@ -38,7 +38,7 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 
 ### Problems
 
-1. **\[RESOLVING - (may just be a prompt fix.)\]** `histories.map(decodeHistory).flat()`@`/agentica/packages/core/src/orchestrate/describe.ts`: if function call history is empty, the prompt becomes like: (in ChatML)
+1. **\[RESOLVING - (may just be a prompt fix, low priority or not fixed)\]** `histories.map(decodeHistory).flat()`@`/agentica/packages/core/src/orchestrate/describe.ts`: if function call history is empty, the prompt becomes like: (in ChatML)
     ```text
     The user's choice of language is "English".
     The user's timezone is: "Asia/Seoul".
@@ -53,11 +53,76 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 
 2. responses from `describe.ts` doesn't seem to be included in history. **Function call histories are provided to agents** BUT follow-up actions and error/problems reported by `describe.ts` is not conveyed which causes problems.
 
-3. **\*\(check notes)[RESOLVED\]** (mostly I think) Multiple function calls in some cases.
+3. **\*\[RESOLVED\] - (check notes)** (mostly I think) Multiple function calls in some cases.
 
-3. **\[RESOLVED\]** ~~broken function calls being filtered by ollama and ending the thinking process.~~ (**Edit**: Issue mostly resolved and also Ollama team working on fix.) 
+4. **\[RESOLVED\]** ~~broken function calls being filtered by ollama and ending the thinking process.~~ (**Edit**: Issue mostly resolved via prompting and also Ollama team working on fix.) 
 
-4. **\[RESOLVED\]** <u>`getApiFunctions` getting cut out when chat gets too long (out of context window), include in sysprompt or put it at last.</u>
+5. **\[RESOLVED\]** <u>`getApiFunctions` getting cut out when chat gets too long (out of context window), include in sysprompt or put it at last.</u>
+
+6. **\[RESOLVED\] - (`stripThink` @ `agentica-dockerina/server/agentica/packages/core/src/factory/histories.ts`)** remove `<think>` tagged content from history (mostly irrelevant and massively fills up context window)
+
+7. **\[RESOLVED\] - (`parseThinkToBlockquote` @ `agentica-dockerina/client/src/components/chat/ChatMessage.tsx`)**
+  alongside no.6, format the content including `<think>` to seeprate from regular response
+
+8. `<tool_response>` is too long, (exceeding context window size) <u>top level `output` field might be okay to purge during prompt</u>:
+```json
+{
+  "function": {
+    "protocol": "class",
+    "description": "Get all articles.\n\nList up every articles archived in the BBS DB.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "required": [],
+      "$defs": {}
+    },
+    "output": {
+      "description": "List of every articles",
+      "type": "array",
+      "items": {
+        "description": "Description of the current {@link IBbsArticle} type:\n\n> Article entity.\n> \n> `IBbsArticle` is an entity representing an article in the BBS (Bulletin Board System).",
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Primary Key",
+            "description": "Primary Key.",
+            "type": "string",
+            "format": "uuid"
+          },
+          "created_at": {
+            "title": "Creation time of the article",
+            "description": "Creation time of the article.",
+            "type": "string",
+            "format": "date-time"
+          },
+          ...
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "title",
+          "body",
+          "thumbnail"
+        ]
+      }
+    }
+  },
+  "value": [
+    {
+      "id": "2a1dbb5b-e827-4134-accc-2c7e37c0471e",
+      "title": "Sample Article 1",
+      "body": "This is the content of the first sample article. It demonstrates how to create an article using the API.",
+      "thumbnail": "https://example.com/thumbnail1.jpg",
+      "created_at": "2025-07-31T14:37:04.808Z",
+      "updated_at": "2025-07-31T14:37:04.808Z"
+    },
+    ...
+  ]
+}
+```
 
 <u>**Interaction notes for \#3: (Problematic ones - function being called multiple times)**</u>
 
@@ -71,10 +136,12 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 4. **`cancel.ts` is expected to cancel unused functions and `call.ts` is supposed to call all functions in `ctx.stack`.** (cancelling and calling the functions remove them from `ctx.stack`) But in some cases, `call.ts` doesn't cancel(all unused) or doesn't call(or fails to call) all the functions. `ctx.stack` is NOT emptied every 'turn' so it'll have a bug where prev. function stacks is called (via `call.ts`) confusing the function executions (running functions unprompted).
 
 > extra prompt logic needs to be added OR `executes.length === 0` @ `OllamaExecute.ts` conditional needs to be removed (any attempt to call the function removes it from `ctx.stack`) OR just empty `ctx.stack` every turn
-
+> 
 > also, if it were to work WITHOUT emptying `ctx.stack`, tool call/response history should be added at every loop (in the fcall loop). which seems like it isn't being done properly 
 
 ## Notes
+
+<u>**Raw ChatML is subject to change due to prompting updates and changes!!!**</u>
 
 **Raw ChatML for describe**
 ```

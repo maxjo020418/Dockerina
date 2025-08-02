@@ -2,22 +2,15 @@ import type { __IChatFunctionReference } from "./__IChatFunctionReference";
 
 export interface __IChatCancelFunctionsApplication {
   /**
-   * Cancel a function from the candidate list to call.
+   * Cancels selected functions from the candidate call list.
    *
-   * If you A.I. agent has understood that the user wants to cancel
-   * some candidate functions to call from the conversation, please cancel
-   * them through this function.
+   * Use this function when:
+   * - The user explicitly requests cancellation of certain candidate functions.
+   * - Multiple candidate functions are selected due to unclear or ambiguous user input (candidate pooling), and unnecessary functions need removal.
    *
-   * Also, when you A.I. find a function that has been selected by the candidate
-   * pooling, cancel the function by calling this function. For reference, the
-   * candidate pooling means that user wants only one function to call, but you A.I.
-   * agent selects multiple candidate functions because the A.I. agent can't specify
-   * only one thing due to lack of specificity or homogeneity of candidate functions.
+   * To cancel the same function multiple times, include its name repeatedly in the `functions` array.
    *
-   * Additionally, if you A.I. agent wants to cancel same function multiply, you can
-   * do it by assigning the same function name multiply in the `functions` property.
-   *
-   * @param props Properties of the function
+   * @param props Properties of the function.
    */
   cancelFunctions: (props: __IChatFunctionReference.IProps) => Promise<void>;
 }

@@ -45,7 +45,7 @@ interface IFailure {
   validation: IValidation.IFailure;
 }
 
-export async function OllamaCancel<Model extends ILlmSchema.Model>(
+export async function ollamaCancel<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model>,
 ): Promise<void> {
   if (ctx.operations.divided === undefined) {
@@ -104,6 +104,7 @@ async function step<Model extends ILlmSchema.Model>(
   retry: number,
   failures?: IFailure[],
 ): Promise<void> {
+  console.log("[OllamaCancel.ts] `ctx.stack.length` is <", ctx.stack.length, ">, cancel.ts step requested.");
   // ----
   // EXECUTE CHATGPT API
   // ----

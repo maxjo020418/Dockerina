@@ -10,7 +10,7 @@ import {
 // needs to be replced if extra custom orchestrations are added
 import { ollamaSelect as select } from "./OllamaSelect";
 import { ollamaCall as call } from "./OllamaCall";
-import { OllamaCancel as cancel } from "./OllamaCancel";
+import { ollamaCancel as cancel } from "./OllamaCancel";
 
 import {
   // orchestrate
@@ -75,10 +75,10 @@ export function ollamaExecute<Model extends ILlmSchema.Model>(executor: Partial<
       }
       else {
         // CANCEL CANDIDATE FUNCTIONS
-        console.log("[OllamaExecute.ts] `ctx.stack.length` is <", ctx.stack.length, ">, calling cancel.ts");
         await (executor?.cancel ?? cancel)(ctx);
-        console.log("[OllamaExecute.ts] cancel complete, `ctx.stack.length` is now <", ctx.stack.length, ">");
+        
       }
+      console.log("[OllamaExecute.ts] `ctx.stack.length` is now <", ctx.stack.length, ">");
     }
 
     // // Empty stack if function(s) are not used

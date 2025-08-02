@@ -15,6 +15,10 @@ import type { AgenticaSystemMessageHistory } from "../histories/AgenticaSystemMe
 import type { AgenticaUserMessageHistory } from "../histories/AgenticaUserMessageHistory";
 import type { IAgenticaHistoryJson } from "../json/IAgenticaHistoryJson";
 
+function stripThink(text: string): string {
+  return text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+}
+
 // internal (** removed JSDoc for external access **)
 export function decodeHistory<Model extends ILlmSchema.Model>(history: AgenticaHistory<Model>): OpenAI.ChatCompletionMessageParam[] {
   // NO NEED TO DECODE DESCRIBE
@@ -96,7 +100,7 @@ export function decodeHistory<Model extends ILlmSchema.Model>(history: AgenticaH
     return [
       {
         role: "assistant",
-        content: history.text,
+        content: stripThink(history.text),
       },
     ];
   }
