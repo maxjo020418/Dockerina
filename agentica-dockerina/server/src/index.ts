@@ -43,6 +43,8 @@ const main = async (): Promise<void> => {
   if (SGlobal.env.OPENAI_API_KEY === undefined)
     console.error("env.OPENAI_API_KEY is not defined.");
 
+  const BASE_URL: string = SGlobal.env.BASE_URL ?? "http://localhost:8000/v1"
+
   // model type here: --------------------------------------
   // "chatgpt" | "claude" | "deepseek" | "gemini" | "llama" | "3.0" | "3.1"
   type ModelType = Extract<ILlmSchema.Model, "chatgpt">;
@@ -65,12 +67,17 @@ const main = async (): Promise<void> => {
             api: new OpenAI({ 
               apiKey: SGlobal.env.OPENAI_API_KEY, // dummy key
               /*
-              :11434/v1 for direct call, :8000/v1 for debug shim
-              - localhost
-              - sylph.yeongmin.net // local DNS
-              - sylph-wsl.ragdoll-ule.ts.net // tailscale
+              BASE_URL SETTINGS:
+              direct call: (DEFAULT)
+                http://localhost:11434/v1
+              via debug shim:
+                http://localhost:8000/v1
+              Tailnet(direct):
+                http://sylph-wsl.ragdoll-ule.ts.net:11434/v1
+              Internal DNS(direct):
+                http://sylph.yeongmin.net:11434/v1
               */
-              baseURL: "http://localhost:8000/v1"
+              baseURL: BASE_URL
             }),
             model: "qwen3-14b-4k" // ollama models (NO QWEN3 SCHEMA YET)
             // model: "gpt-4o-mini" // chatgpt API
