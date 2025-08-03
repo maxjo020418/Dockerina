@@ -75,7 +75,7 @@ export function decodeHistory<Model extends ILlmSchema.Model>(history: AgenticaH
             protocol: history.operation.protocol,
             description: history.operation.function.description,
             parameters: history.operation.function.parameters,
-            output: history.operation.function.output,
+            // output: history.operation.function.output,  // removed to reduce ctx window size
             ...(history.operation.protocol === "http"
               ? {
                   method: history.operation.function.method,

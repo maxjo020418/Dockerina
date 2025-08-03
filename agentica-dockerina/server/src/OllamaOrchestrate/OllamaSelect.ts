@@ -185,7 +185,7 @@ async function step<Model extends ILlmSchema.Model>(
               type: "text",
               text: text 
                 + "\n(When calling a function, you must use it via the `selectFunctions` and follow this format: "
-                + "{\"name\": \"selectFunctions\", \"arguments\": {\"functions\": [{\"name\": <function name>, \"reason\": <reason>}, ...]}}"
+                + "{\"name\": \"selectFunctions\", \"arguments\": {\"functions\": [{\"name\": <function name>, \"reason\": <reason>}, ...]}})"
             } satisfies OpenAI.ChatCompletionContentPartText;
           }
           return decoded

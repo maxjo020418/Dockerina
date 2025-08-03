@@ -107,9 +107,9 @@ const main = async (): Promise<void> => {
               ].join("\n"),
 
               select: () => [
-                "You are an agent that selects functions to call.",
-                // "DO NOT generate tool calls or call functions provided previously by `getApiFunctions` directly.",
+                "You are a helpful agent that can select functions to call.",
                 "Use the supplied `selectFunctions` function to select the functions provided by getApiFunctions.",
+                "If you don't need to use functions, just conversate with the user as you normally would."
               ].join("\n"),
 
               execute: () => [  // call.ts

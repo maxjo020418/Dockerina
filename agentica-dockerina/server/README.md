@@ -64,7 +64,7 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 7. **\[RESOLVED\] - (`parseThinkToBlockquote` @ `agentica-dockerina/client/src/components/chat/ChatMessage.tsx`)**
   alongside no.6, format the content including `<think>` to seeprate from regular response
 
-8. `<tool_response>` is too long, (exceeding context window size) <u>top level `output` field might be okay to purge during prompt</u>:
+8. **\[RESOLVED\] - (edited `decodeHistory` @ `agentica-dockerina/server/agentica/packages/core/src/factory/histories.ts`)**`<tool_response>` is too long, (exceeding context window size) <u>top level `output` field might be okay to purge during prompt</u>:
 ```json
 {
   "function": {
