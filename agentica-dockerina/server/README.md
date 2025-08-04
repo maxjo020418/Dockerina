@@ -124,7 +124,7 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 }
 ```
 
-<u>**Interaction notes for \#3: (Problematic ones - function being called multiple times)**</u>
+<u>**Interaction notes for \#3: (Problematic ones - function being called multiple times *separately*)**</u>
 
 1. user > "what can you do?"
 2. selector > "I should use `selectFunctions` to get all function's infoi" > calls all known functions (eg: bbs list, create, update, erase) via `selectFunctions`

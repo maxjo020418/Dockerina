@@ -12,7 +12,10 @@ export class SGlobal {
 interface IEnvironments {
   OPENAI_API_KEY?: string;
   PORT: `${number}`;
-  BASE_URL?: string;
+
+  BASE_URL?: string; // Base URL for the API, default is "http://localhost:8000/v1"
+  DOCKER_HOST?: string; // Docker host URL, default is "unix:///var/run
+  DOCKER_PORT?: `${number}`; // Docker port for connection (when DOCKER_HOST is set, default is 2375)
 }
 
 const environments = new Singleton(() => {

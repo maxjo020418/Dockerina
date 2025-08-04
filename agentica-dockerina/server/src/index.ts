@@ -22,9 +22,9 @@ import typia, { Primitive } from "typia";
 import { SGlobal } from "./SGlobal";
 import { BbsArticleService } from "./services/BbsArticleService";
 
-// custom stuffs
 import type { ILlmSchema } from "@samchon/openapi/lib/structures/ILlmSchema";
 
+// custom stuffs
 import { ollamaSelect } from "./OllamaOrchestrate/OllamaSelect";
 import { ollamaCall } from "./OllamaOrchestrate/OllamaCall";
 import { ollamaExecute } from "./OllamaOrchestrate/OllamaExecute";
@@ -43,7 +43,7 @@ const main = async (): Promise<void> => {
   if (SGlobal.env.OPENAI_API_KEY === undefined)
     console.error("env.OPENAI_API_KEY is not defined.");
 
-  const BASE_URL: string = SGlobal.env.BASE_URL ?? "http://localhost:8000/v1"
+  const BASE_URL: string = SGlobal.env.BASE_URL ?? "http://localhost:11434/v1"
 
   // model type here: --------------------------------------
   // "chatgpt" | "claude" | "deepseek" | "gemini" | "llama" | "3.0" | "3.1"
@@ -67,7 +67,7 @@ const main = async (): Promise<void> => {
             api: new OpenAI({ 
               apiKey: SGlobal.env.OPENAI_API_KEY, // dummy key
               /*
-              BASE_URL SETTINGS:
+              BASE_URL Ollama server addr.:
               direct call: (DEFAULT)
                 http://localhost:11434/v1
               via debug shim:
@@ -109,7 +109,7 @@ const main = async (): Promise<void> => {
               select: () => [
                 "You are a helpful agent that can select functions to call.",
                 "Use the supplied `selectFunctions` function to select the functions provided by getApiFunctions.",
-                "If you don't need to use functions, just conversate with the user as you normally would."
+                "If you don't need to or can't use functions, do your best within your abilities."
               ].join("\n"),
 
               execute: () => [  // call.ts
@@ -121,10 +121,6 @@ const main = async (): Promise<void> => {
               describe: () => [
                 "You are an agent describing return values from function calls.",
                 "There should be previous histories of function calls above.",
-                // "When describing the return values, don't summarize or abbreviate them too much.",
-                // "Provide as much detail as possible.",
-                // "Format the content in markdown and if needed, use the mermaid syntax for diagrams.",
-                // "If the content includes images, use the markdown image syntax to include them.",
                 "format as markdown",
                 "Provide TL;DR of the result in the end."
               ].join("\n"),
@@ -145,7 +141,7 @@ const main = async (): Promise<void> => {
               describe: ollamaDescribe,
             }),
 
-            // [Custom added parameters] NOTE: seems broken? in-line commands or other methods needed.
+            // [Custom added parameters] NOTE: seems like it's unsupported for newest Ollama models...
             // enable Chain of Thought reasoning
             // (only for ollama's COT supported models)
             think: true,
