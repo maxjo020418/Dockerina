@@ -1,7 +1,12 @@
 import Docker from "dockerode";
 
 import { SGlobal } from "../SGlobal";
-import type { IContainerSimple, IContainerImageSimple, ISimpleContainerInspectInfo } from "../structures/IDockerode";
+import type { 
+    IContainerSimple, 
+    IContainerImageSimple, 
+    ISimpleContainerInspectInfo,
+    ISimpleContainerLog,
+} from "../structures/IDockerode";
 
 /*
 ** make sure that user is added to docker group **
@@ -106,20 +111,6 @@ export class DockerodeService {
     }
 
     /**
-     * Inspects a Docker container by its ID
-     * @param id Container ID
-     * @returns Simplified container inspection info
-     */
-    public async inspectContainer(params: { id: string }): Promise<ISimpleContainerInspectInfo> {
-        try {
-            const container = await this.docker.getContainer(params.id).inspect();
-            return this.getContainerInspectSimpleAttributes(container);
-        } catch (err) {
-            throw new Error(`Failed to get inspect Docker container with ID ${params.id}.`);
-        }
-    }
-
-    /**
      * lists all containers (running and stopped)
      * @returns List of all containers
      */
@@ -128,8 +119,9 @@ export class DockerodeService {
             const containers = await this.docker.listContainers({ all: true });
             return containers.map(c => this.getContainerSimpleAttributes(c));
         } catch (err) {
+            const err_msg = err instanceof Error ? err.message : String(err);
             console.error("[DockerodeService.ts] Error listing Docker containers:", err);
-            throw new Error("Failed to list Docker containers.");
+            throw new Error(`Failed to list Docker containers: ${err_msg}`);
         }
     }
 
@@ -142,12 +134,69 @@ export class DockerodeService {
             const images = await this.docker.listImages();
             return images.map(i => this.getContainerImageSimpleAttributes(i));
         } catch (err) {
+            const err_msg = err instanceof Error ? err.message : String(err);
             console.error("[DockerodeService.ts] Error listing Docker images:", err);
-            throw new Error("Failed to list Docker images.");
+            throw new Error(`Failed to list Docker images: ${err_msg}`);
         }
     }
-    
+
     /**
+     * Inspects a Docker container by its ID
+     * @param params.id Container ID
+     * @returns Simplified container inspection info
+     */
+    public async inspectContainer(params: { id: string }): Promise<ISimpleContainerInspectInfo> {
+        try {
+            const container = await this.docker.getContainer(params.id).inspect();
+            return this.getContainerInspectSimpleAttributes(container);
+        } catch (err) {
+            const err_msg = err instanceof Error ? err.message : String(err);
+            console.error("[DockerodeService.ts] Error inspecting Docker container:", err);
+            throw new Error(`Failed to get inspect Docker container: ${err_msg}`);
+        }
+    }
+
+    /**
+     * Gets the logs (last 10 lines) of a Docker container by its ID
+     * @param params.id Container ID
+     * @returns Simplified container log info
+     */
+    public async getContainerLogs(params: { id: string }): Promise<Buffer> {
+        try {
+            const log = await this.docker.getContainer(params.id).logs({
+                stderr: true,
+                stdout: false,  // only including errors (for now)
+                tail: 10,  // only last 10 lines to save on context window!
+                follow: false,
+            });
+            return log;
+        } catch (err) {
+            const err_msg = err instanceof Error ? err.message : String(err);
+            console.error("[DockerodeService.ts] Error getting logs for Docker container:", err);
+            throw new Error(`Failed to get logs for Docker container: ${err_msg}`);
+        }
+    }
+
+    /**
+     * Gets the stats of a Docker container by its ID
+     * @param params.id Container ID
+     * @returns cpu, memory usage and other system info
+     */
+    public async getContainerStats(params: { id: string }): Promise<Docker.ContainerStats> {
+        try {
+            const stats = await this.docker.getContainer(params.id).stats({
+                stream: false,
+            });
+            return stats;
+        } catch (err) {
+            const err_msg = err instanceof Error ? err.message : String(err);
+            console.error("[DockerodeService.ts] Error getting stats for Docker container:", err);
+            throw new Error(`Failed to get stats for Docker container: ${err_msg}`);
+        }
+    }
+
+    /**
+     * @param params.id Container ID
      * Starts a Docker container by its ID.
      */
     public async startContainer(params: { id: string }): Promise<void> {
@@ -155,12 +204,14 @@ export class DockerodeService {
             await this.getContainer(params.id).start();
             console.log(`[DockerodeService.ts] Docker container with ID ${params.id} started successfully.`);
         } catch (err) {
+            const err_msg = err instanceof Error ? err.message : String(err);
             console.error("[DockerodeService.ts] Error starting Docker container:", err);
-            throw new Error(`Failed to start Docker container with ID ${params.id}.`);
+            throw new Error(`Failed to start Docker container: ${err_msg}`);
         }
     }
 
     /**
+     * @param params.id Container ID
      * Stops a Docker container by its ID.
      */
     public async stopContainer(params: { id: string }): Promise<void> {
@@ -168,8 +219,9 @@ export class DockerodeService {
             await this.getContainer(params.id).stop();
             console.log(`[DockerodeService.ts] Docker container with ID ${params.id} stopped successfully.`);
         } catch (err) {
+            const err_msg = err instanceof Error ? err.message : String(err);
             console.error("[DockerodeService.ts] Error stopping Docker container:", err);
-            throw new Error(`Failed to stop Docker container with ID ${params.id}.`);
+            throw new Error(`Failed to stop Docker container: ${err_msg}`);
         }
     }
 

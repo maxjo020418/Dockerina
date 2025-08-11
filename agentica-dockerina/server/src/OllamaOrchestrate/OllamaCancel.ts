@@ -104,7 +104,7 @@ async function step<Model extends ILlmSchema.Model>(
   retry: number,
   failures?: IFailure[],
 ): Promise<void> {
-  console.log("[OllamaCancel.ts] `ctx.stack.length` is <", ctx.stack.length, ">, cancel.ts step requested.");
+  console.log("[OllamaCancel.ts] `ctx.stack.length` is <", ctx.stack.length, ">, cancellation step requested.");
   // ----
   // EXECUTE CHATGPT API
   // ----
@@ -243,6 +243,7 @@ async function step<Model extends ILlmSchema.Model>(
         }
 
         for (const reference of input.functions) {
+          console.log("[OllamaCancel.ts] cancelling function:", reference.name);
           cancelFunctionFromContext(ctx, reference);
         }
       }

@@ -51,24 +51,23 @@ export function ollamaExecute<Model extends ILlmSchema.Model>(executor: Partial<
       console.log("[OllamaExecute.ts] `ctx.stack.length` is < 0 >, terminating.")
       return;
     }
-    console.log("[OllamaExecute.ts] selection complete, `ctx.stack.length` is now <", ctx.stack.length, ">");
+    console.log("[OllamaExecute.ts] selection complete, `ctx.stack.length` is now <", ctx.stack.length, "> :\n");
+    for (const op of ctx.stack) {
+      console.log("\t", op.operation.name);
+    }
 
     // FUNCTION CALLING LOOP
     console.log("[OllamaExecute.ts] === function calling loop started ===")
+    const allExecutes: AgenticaExecuteEvent<Model>[] = [];
     while (true) {
       // EXECUTE FUNCTIONS
       const executes: AgenticaExecuteEvent<Model>[] = await (
         executor?.call ?? call
       )(ctx, ctx.stack.map(s => s.operation));
 
-      // EXPLAIN RETURN VALUES
-      if (executor?.describe !== null && executor?.describe !== false) {  
-        await (
-          typeof executor?.describe === "function"
-            ? executor.describe
-            : describe
-        )(ctx, executes);
-      }
+      // Collect all executes for later description
+      allExecutes.push(...executes);
+
       if (executes.length === 0 || ctx.stack.length === 0) {
         console.log("[OllamaExecute.ts] === function calling loop ended ===")
         break;
@@ -79,6 +78,15 @@ export function ollamaExecute<Model extends ILlmSchema.Model>(executor: Partial<
         
       }
       console.log("[OllamaExecute.ts] `ctx.stack.length` is now <", ctx.stack.length, ">");
+    }
+
+    // EXPLAIN RETURN VALUES - AFTER ALL FUNCTIONS ARE COMPLETE
+    if (executor?.describe !== null && executor?.describe !== false && allExecutes.length > 0) {  
+      await (
+        typeof executor?.describe === "function"
+          ? executor.describe
+          : describe
+      )(ctx, allExecutes);
     }
 
     // // Empty stack if function(s) are not used

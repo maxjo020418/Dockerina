@@ -81,7 +81,7 @@ export interface IContainerImageSimple extends IContainerImageBase {
 }
 
 /**
- * Simplified Docker container inspection info
+ * Docker container inspection info
  */
 export interface ISimpleContainerInspectInfo extends IContainerInspectBase {
     /**
@@ -147,5 +147,30 @@ export interface ISimpleContainerInspectInfo extends IContainerInspectBase {
         Destination: string;
         Mode: string;
         RW: boolean;
+    }>;
+}
+
+/**
+ * Docker container log info
+ */
+export interface ISimpleContainerLog { // from ContainerInspectInfo.State.Health
+    /**
+     * Health status of the container
+     */
+    Status: string;
+
+    /**
+     * Number of consecutive failed health checks
+     */
+    FailingStreak: number;
+
+    /**
+     * Array of log entries for the container
+     */
+    Log: Array<{
+        Start: string;
+        End: string;
+        ExitCode: number;
+        Output: string;
     }>;
 }
