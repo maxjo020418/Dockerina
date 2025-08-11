@@ -20,9 +20,11 @@ import { WebSocketServer } from "tgrid";
 import typia, { Primitive } from "typia";
 
 import { SGlobal } from "./SGlobal";
-import { BbsArticleService } from "./services/BbsArticleService";
-
 import type { ILlmSchema } from "@samchon/openapi/lib/structures/ILlmSchema";
+
+// tools
+import { BbsArticleService } from "./services/BbsArticleService";
+import { DockerodeService } from "./services/DockerodeService";
 
 // custom stuffs
 import { ollamaSelect } from "./OllamaOrchestrate/OllamaSelect";
@@ -89,7 +91,7 @@ const main = async (): Promise<void> => {
             // only used for AgenticaSystemPrompt.COMMON
             // ------------------
             locale: "English",
-            // timezone: "",
+            // timezone: "", // auto default
             // ------------------
 
             /* prompting order: `.../src/orchestrate/select.ts` is used... (idk why not `initialize.ts`)
@@ -128,7 +130,7 @@ const main = async (): Promise<void> => {
               cancel: () => [
                 "You are an agent for cancelling functions which are prepared to call.",
                 "Use the supplied tools to select some functions to cancel of `getApiFunctions()` returned.",
-                "If you can't find any proper function to select, don't talk, don't do anything.",
+                "If you can't find any proper function to select, don't do anything.",
                 ].join("\n"),
 
               // initialize: () => "",
@@ -152,11 +154,17 @@ const main = async (): Promise<void> => {
 
           // le' functions I add
           controllers: [
+            // {
+            //   protocol: "class",
+            //   name: "bbs",
+            //   application: typia.llm.application<BbsArticleService, ModelType>(),
+            //   execute: new BbsArticleService(),
+            // },
             {
               protocol: "class",
-              name: "bbs",
-              application: typia.llm.application<BbsArticleService, ModelType>(),
-              execute: new BbsArticleService(),
+              name: "dockerode",
+              application: typia.llm.application<DockerodeService, ModelType>(),
+              execute: new DockerodeService(),
             },
           ],
 

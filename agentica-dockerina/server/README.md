@@ -30,13 +30,15 @@ curl http://[address]:11434/v1/chat/completions \
 
 added `think` option to `AgenticaRequestEvent` (`@Agentica/core`)
 
+**+ others mentioned in TODO/Problems**
+
 ## TODO
 
 add local model(Ollama) option to `LlmSchema.Model` and such.
 
 Change prompting/structures to reflect an Agentic behavior rather than forcing. (not sure if it'll work well for smaller context models well...)
 
-### Problems
+#### Problems
 
 1. **\[RESOLVING - (may just be a prompt fix, low priority or not fixed)\]** `histories.map(decodeHistory).flat()`@`/agentica/packages/core/src/orchestrate/describe.ts`: if function call history is empty, the prompt becomes like: (in ChatML)
     ```text
@@ -51,20 +53,20 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
     in raw ChatML, sysprompts are not ordered the same use chat histories. The default prompt is in an odd position. (**Prompt sentence has been changed from the above default.**)
     which can/might confuse the model, needs smth like `if len(histories) <= 0 then "different prompt"`
 
-2. responses from `describe.ts` doesn't seem to be included in history. **Function call histories are provided to agents** BUT follow-up actions and error/problems reported by `describe.ts` is not conveyed which causes problems.
+2. responses from `describe.ts` doesn't seem to be included in history. **Function call histories are provided to agents** BUT follow-up actions and error/problems reported by `describe.ts` is not conveyed which causes problems. **(not planned to be fixed to reduce context size for now)**
 
-3. **\*\[RESOLVED\] - (check notes)** (mostly I think) Multiple function calls in some cases.
+3. **\[RESOLVED\] - \*(check notes)** (mostly I think) Multiple function calls in some cases.
 
-4. **\[RESOLVED\]** ~~broken function calls being filtered by ollama and ending the thinking process.~~ (**Edit**: Issue mostly resolved via prompting and also Ollama team working on fix.) 
+4. **\[RESOLVED\]** ~~broken function calls being filtered by ollama and ending the thinking process.~~ (**Edit**: Issue mostly resolved via prompting/context reduction and also [Ollama team working on fix](https://github.com/ollama/ollama/issues/11381).) 
 
 5. **\[RESOLVED\]** <u>`getApiFunctions` getting cut out when chat gets too long (out of context window), include in sysprompt or put it at last.</u>
 
 6. **\[RESOLVED\] - (`stripThink` @ `agentica-dockerina/server/agentica/packages/core/src/factory/histories.ts`)** remove `<think>` tagged content from history (mostly irrelevant and massively fills up context window)
 
 7. **\[RESOLVED\] - (`parseThinkToBlockquote` @ `agentica-dockerina/client/src/components/chat/ChatMessage.tsx`)**
-  alongside no.6, format the content including `<think>` to seeprate from regular response
+  alongside no.6, format the content including `<think>` to separate from regular response
 
-8. **\[RESOLVED\] - (edited `decodeHistory` @ `agentica-dockerina/server/agentica/packages/core/src/factory/histories.ts`)**`<tool_response>` is too long, (exceeding context window size) <u>top level `output` field might be okay to purge during prompt</u>:
+8. **\[RESOLVED\] - (edited `decodeHistory` @ `agentica-dockerina/server/agentica/packages/core/src/factory/histories.ts`)**`<tool_response>` is too long, (exceeding context window size, sometimes for a single request) <u>top level `output` field might be okay to purge during prompt (only contains return type info)</u>:
 ```json
 {
   "function": {
