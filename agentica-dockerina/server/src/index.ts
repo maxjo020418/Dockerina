@@ -164,7 +164,7 @@ const main = async (): Promise<void> => {
               protocol: "class",
               name: "dockerode",
               application: typia.llm.application<DockerodeService, ModelType>(),
-              execute: new DockerodeService(),
+              execute: DockerodeService.getInstance(),
             },
           ],
 

@@ -1,11 +1,28 @@
+import { useState } from "react";
 import reactLogo from "../assets/react.svg";
 import agenticaLogo from "/agentica.svg";
+import { config } from "../config";
 
 export function Landing() {
+  const [portainerUrl, setPortainerUrl] = useState(config.portainer.url);
+  const [isEditingUrl, setIsEditingUrl] = useState(false);
+  const [tempUrl, setTempUrl] = useState(portainerUrl);
+
+  const handleUrlUpdate = () => {
+    setPortainerUrl(tempUrl);
+    setIsEditingUrl(false);
+  };
+
+  const handleUrlCancel = () => {
+    setTempUrl(portainerUrl);
+    setIsEditingUrl(false);
+  };
+
   return (
-    <section className="flex-1 flex flex-col items-center justify-center p-8 relative">
-      <div className="space-y-8">
-        <div className="flex gap-8 items-center justify-center">
+    <section className="flex-1 flex flex-col p-4 md:p-8 relative">
+      {/* Header */}
+      <div className="flex-shrink-0 space-y-6 text-center py-4">
+        <div className="flex gap-6 items-center justify-center">
           <a
             href="https://wrtnlabs.io/agentica/"
             target="_blank"
@@ -15,10 +32,10 @@ export function Landing() {
             <img
               src={agenticaLogo}
               alt="Agentica logo"
-              className="w-24 h-24 transition-all hover:filter hover:drop-shadow-[0_0_1rem_rgba(255,255,255,0.5)]"
+              className="w-16 h-16 transition-all hover:filter hover:drop-shadow-[0_0_1rem_rgba(255,255,255,0.5)]"
             />
           </a>
-          <span className="text-4xl font-bold text-gray-500">+</span>
+          <span className="text-2xl font-bold text-gray-500">+</span>
           <a
             href="https://react.dev"
             target="_blank"
@@ -28,38 +45,70 @@ export function Landing() {
             <img
               src={reactLogo}
               alt="React logo"
-              className="w-24 h-24 animate-[spin_10s_linear_infinite] transition-all hover:filter hover:drop-shadow-[0_0_1rem_#61dafbaa]"
+              className="w-16 h-16 animate-[spin_10s_linear_infinite] transition-all hover:filter hover:drop-shadow-[0_0_1rem_#61dafbaa]"
             />
           </a>
         </div>
 
-        <div className="space-y-4 text-center">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-100 to-white bg-clip-text text-transparent">
-            Agentica + React
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-100 to-white bg-clip-text text-transparent">
+            Dockerina Console
           </h1>
-          <p className="text-lg text-gray-400 max-w-md">
-            Experience the power of AI-driven conversations with Agentica,
-            seamlessly integrated with React's modern UI framework.
+          <p className="text-sm text-gray-400">
+            Manage your Docker containers with Portainer and Dockerina
           </p>
         </div>
 
-        <div className="flex gap-4 justify-center">
-          <a
-            href="https://wrtnlabs.io/agentica/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-2 bg-white text-zinc-900 font-semibold rounded-lg hover:bg-gray-100 transition-all shadow-md hover:shadow-lg"
-          >
-            Documentation
-          </a>
-          <a
-            href="https://github.com/wrtnlabs/agentica"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-2 border border-gray-700 bg-transparent text-gray-300 rounded-lg hover:bg-white/5 transition-all"
-          >
-            GitHub
-          </a>
+        {/* URL Configuration */}
+        <div className="flex items-center justify-center gap-2">
+          {isEditingUrl ? (
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={tempUrl}
+                onChange={(e) => setTempUrl(e.target.value)}
+                className="px-3 py-1 bg-gray-800 text-gray-200 border border-gray-600 rounded text-sm"
+                placeholder="Portainer URL"
+              />
+              <button
+                onClick={handleUrlUpdate}
+                className="px-2 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-all"
+              >
+                ✓
+              </button>
+              <button
+                onClick={handleUrlCancel}
+                className="px-2 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 transition-all"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2 items-center">
+              <span className="text-xs text-gray-500">
+                {portainerUrl}
+              </span>
+              <button
+                onClick={() => setIsEditingUrl(true)}
+                className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600 transition-all"
+              >
+                Edit URL
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Portainer Console Iframe */}
+      <div className="flex-1 min-h-0">
+        <div className="w-full h-full border border-gray-600 rounded-lg overflow-hidden shadow-2xl">
+          <iframe
+            src={portainerUrl}
+            className="w-full h-full"
+            title="Portainer Console"
+            allow="fullscreen"
+            style={{ minHeight: '600px' }}
+          />
         </div>
       </div>
     </section>

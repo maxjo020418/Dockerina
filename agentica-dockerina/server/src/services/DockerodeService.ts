@@ -11,9 +11,10 @@ newgrp docker           # or log out/in
 */
 
 export class DockerodeService {
+    private static instance: DockerodeService;
     private docker: Docker;
 
-    constructor() {
+    private constructor() {
         const docker_options = () => {
             if (SGlobal.env.DOCKER_HOST == undefined) {
                 // local docker socket
@@ -29,6 +30,14 @@ export class DockerodeService {
         };
         console.log("[DockerodeService.ts] Initializing Dockerode with options:", docker_options());
         this.docker = new Docker(docker_options());
+    }
+
+    // so that instance is only initialized once!
+    public static getInstance(): DockerodeService {
+        if (!DockerodeService.instance) {
+            DockerodeService.instance = new DockerodeService();
+        }
+        return DockerodeService.instance;
     }
 
     private getContainerSimpleAttributes(container: Docker.ContainerInfo): IContainerSimple {
@@ -195,26 +204,36 @@ export class DockerodeService {
      * @param image Docker image full name
      * @param name Container name (will be prefixed with "Dockerina-")
      * @param command Command to run in container (optional)
+     * @param env Environment variables as key-value pairs (optional)
      */
     public async runContainer(params: { 
         image: string;
         name?: string;
         command?: string[];
+        env?: Record<string, string>;
     }): Promise<Docker.Container> {
         try {
             const containerName = params.name ? `Dockerina-${params.name}` : `Dockerina-${Date.now()}`;
+            
+            // Convert env object to Docker's expected format: ["KEY=value", ...]
+            const envArray = params.env ? 
+                Object.entries(params.env).map(([key, value]) => `${key}=${value}`) : 
+                undefined;
+            
             const container = await this.docker.createContainer({
                 Image: params.image,
                 Cmd: params.command || [],
                 name: containerName,
+                Env: envArray,
                 Tty: false,
             });
             await container.start();
             console.log(`[DockerodeService.ts] Docker container "${containerName}" with image ${params.image} created and started successfully.`);
             return container;
         } catch (err) {
+            const err_msg = err instanceof Error ? err.message : String(err);
             console.error("[DockerodeService.ts] Error running Docker container:", err);
-            throw new Error(`Failed to run Docker container with image ${params.image}.`);
+            throw new Error(`Failed to run Docker container: ${err_msg}`);
         }
     }
 
@@ -227,8 +246,9 @@ export class DockerodeService {
             await this.getContainer(params.id).remove();
             console.log(`[DockerodeService.ts] Docker container with ID ${params.id} removed successfully.`);
         } catch (err) {
+            const err_msg = err instanceof Error ? err.message : String(err);
             console.error("[DockerodeService.ts] Error removing Docker container:", err);
-            throw new Error(`Failed to remove Docker container with ID ${params.id}.`);
+            throw new Error(`Failed to remove Docker container: ${err_msg}`);
         }
     }
 
@@ -241,8 +261,9 @@ export class DockerodeService {
             await this.getContainer(params.id).restart();
             console.log(`[DockerodeService.ts] Docker container with ID ${params.id} restarted successfully.`);
         } catch (err) {
+            const err_msg = err instanceof Error ? err.message : String(err);
             console.error("[DockerodeService.ts] Error restarting Docker container:", err);
-            throw new Error(`Failed to restart Docker container with ID ${params.id}.`);
+            throw new Error(`Failed to restart Docker container: ${err_msg}`);
         }
     }
 
@@ -262,7 +283,8 @@ export class DockerodeService {
                         await this.getContainer(container.Id).stop();
                         console.log(`[DockerodeService.ts] Stopped Dockerina container: ${container.Names[0]}`);
                     } catch (err) {
-                        console.error(`[DockerodeService.ts] Failed to stop container ${container.Names[0]}:`, err);
+                        const err_msg = err instanceof Error ? err.message : String(err);
+                        console.error(`[DockerodeService.ts] Failed to stop container ${container.Names[0]}:`, err_msg);
                     }
                 }
             });
@@ -303,7 +325,8 @@ export class DockerodeService {
                     await this.getContainer(container.Id).remove();
                     console.log(`[DockerodeService.ts] Removed Dockerina container: ${container.Names[0]}`);
                 } catch (err) {
-                    console.error(`[DockerodeService.ts] Failed to remove container ${container.Names[0]}:`, err);
+                    const err_msg = err instanceof Error ? err.message : String(err);
+                    console.error(`[DockerodeService.ts] Failed to remove container ${container.Names[0]}:`, err_msg);
                 }
             });
 
