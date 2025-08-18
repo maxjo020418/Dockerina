@@ -10,16 +10,26 @@ export class SGlobal {
 }
 
 interface IEnvironments {
-  OPENAI_API_KEY?: string;
-  PORT: `${number}`;
+  OPENAI_API_KEY: string; // defaults to dummy key
+  PORT: number; // port for the Agentica server
+  BASE_URL: string; // Base URL for the API, default is "http://localhost:8000/v1"
 
-  BASE_URL?: string; // Base URL for the API, default is "http://localhost:8000/v1"
-  DOCKER_HOST?: string; // Docker host URL, default is "unix:///var/run
-  DOCKER_PORT?: `${number}`; // Docker port for connection (when DOCKER_HOST is set, default is 2375)
+  DOCKER_HOST: string; // Docker host URL, default is "unix:///var/run/docker.sock"
+  DOCKER_PORT: number; // Docker port for connection (when DOCKER_HOST is set, default is 2375)
 }
 
 const environments = new Singleton(() => {
   const env = dotenv.config();
   dotenvExpand.expand(env);
-  return typia.assert<IEnvironments>(process.env);
+  
+  // set default value if not defined
+  const parsedEnv: IEnvironments = {
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "NO_KEY",
+    PORT: process.env.PORT ? parseInt(process.env.PORT, 10) : 3000,
+    BASE_URL: process.env.BASE_URL || "http://localhost:11434/v1",
+    DOCKER_HOST: process.env.DOCKER_HOST || "unix:///var/run/docker.sock",
+    DOCKER_PORT: process.env.DOCKER_PORT ? parseInt(process.env.DOCKER_PORT, 10) : 2375,
+  };
+  
+  return typia.assert<IEnvironments>(parsedEnv);
 });

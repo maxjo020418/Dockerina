@@ -1,5 +1,5 @@
 ### Inst.
-
+commands
 ```bash
 pnpm install
 pnpm --filter @agentica/core build
@@ -16,6 +16,15 @@ pnpm --filter @agentica/core build && pnpm build && pnpm start
 curl http://[address]:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d @[payload].json
+```
+`.env` for server
+```env
+# all env vars are optional, below are default values.
+OPENAI_API_KEY=NO_KEY
+PORT=3000  # port for the Agentica server
+BASE_URL=http://localhost:11434/v1  # URL for the LLM API (w/ port)
+DOCKER_HOST=unix:///var/run/docker.sock
+DOCKER_PORT=2375  # ignored when using unix socket
 ```
 
 ## Changes

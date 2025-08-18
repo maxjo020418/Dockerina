@@ -12,9 +12,9 @@ import type {
 
 /*
 ** make sure that user is added to docker group **
-sudo groupadd docker    # if group does not exist
+sudo groupadd docker # if group does not exist
 sudo usermod -aG docker $USER
-newgrp docker           # or log out/in
+newgrp docker # or log out/in
 */
 
 export class DockerodeService {
@@ -22,21 +22,24 @@ export class DockerodeService {
     private docker: Docker;
 
     private constructor() {
-        const docker_options = () => {
-            if (SGlobal.env.DOCKER_HOST == undefined) {
-                // local docker socket
-                return { socketPath: "/var/run/docker.sock" }
-            }
-            else {
-                // remote server options
-                return {
-                    host: SGlobal.env.DOCKER_HOST,
-                    port: SGlobal.env.DOCKER_PORT ?? "2375",
-                };
-            }
-        };
-        console.log("[DockerodeService.ts] Initializing Dockerode with options:", docker_options());
-        this.docker = new Docker(docker_options());
+        const dockerHost = SGlobal.env.DOCKER_HOST;
+        let docker_options: any;
+        
+        if (dockerHost.startsWith('unix://')) {
+            // Unix socket connection (no port)
+            docker_options = {
+                socketPath: dockerHost.replace('unix://', '')
+            };
+        } else {
+            // TCP connection
+            docker_options = {
+                host: dockerHost,
+                port: SGlobal.env.DOCKER_PORT,
+            };
+        }
+        
+        console.log("[DockerodeService.ts] Initializing Dockerode with options:", docker_options);
+        this.docker = new Docker(docker_options);
     }
 
     // so that instance is only initialized once!

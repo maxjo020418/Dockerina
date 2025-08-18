@@ -42,10 +42,7 @@ const getPromptHistories = async (
 };
 
 const main = async (): Promise<void> => {
-  if (SGlobal.env.OPENAI_API_KEY === undefined)
-    console.error("env.OPENAI_API_KEY is not defined.");
-
-  const BASE_URL: string = SGlobal.env.BASE_URL ?? "http://localhost:11434/v1"
+  const BASE_URL: string = SGlobal.env.BASE_URL
 
   // model type here: --------------------------------------
   // "chatgpt" | "claude" | "deepseek" | "gemini" | "llama" | "3.0" | "3.1"
@@ -60,7 +57,8 @@ const main = async (): Promise<void> => {
   > = new WebSocketServer();
 
   await server.open(
-    Number(SGlobal.env.PORT), async (acceptor) => {
+    SGlobal.env.PORT, 
+    async (acceptor) => {
       const url: URL = new URL(`http://localhost${acceptor.path}`);
       const agent: Agentica<ModelType> = new Agentica<ModelType>(
         {
