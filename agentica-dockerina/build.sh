@@ -74,8 +74,9 @@ setup_env_files() {
         cat > server/.env << EOF
 # Dockerina Server Environment Configuration
 OPENAI_API_KEY=NO_KEY
-PORT=3000
 BASE_URL=http://localhost:11434/v1
+MODEL=qwen3-14b-4k
+PORT=3000
 DOCKER_HOST=unix:///var/run/docker.sock
 DOCKER_PORT=2375
 EOF

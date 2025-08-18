@@ -263,6 +263,15 @@ async function propagateHttp<Model extends ILlmSchema.Model>(
   try {
     // CALL HTTP API
     const response: IHttpResponse = await executeHttpOperation(props.operation, props.call.arguments);
+    
+    // Log detailed error information for bad requests
+    if (response.status >= 400) {
+      console.error(`[OllamaCall.ts] HTTP ${response.status} Error for operation "${props.call.operation.name}"`);
+      console.error(`[OllamaCall.ts] Request arguments:`, JSON.stringify(props.call.arguments, null, 2));
+      console.error(`[OllamaCall.ts] Response body:`, JSON.stringify(response.body, null, 2));
+      console.error(`[OllamaCall.ts] Retry attempt: ${props.retry}/${props.ctx.config?.retry ?? AgenticaConstant.RETRY}`);
+    }
+    
     // CHECK STATUS
     const success: boolean
           = ((response.status === 400
@@ -452,6 +461,9 @@ async function correct<Model extends ILlmSchema.Model>(
   retry: number,
   error: unknown,
 ): Promise<AgenticaExecuteEvent<Model> | null> {
+  console.log(`[OllamaCall.ts] Starting error correction for "${call.operation.name}" (retry ${retry})`);
+  console.log(`[OllamaCall.ts] Error details:`, typeof error === 'string' ? error : JSON.stringify(error, null, 2));
+  
   // ----
   // EXECUTE CHATGPT API
   // ----

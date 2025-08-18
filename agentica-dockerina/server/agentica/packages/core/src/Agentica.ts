@@ -34,7 +34,7 @@ import { streamDefaultReaderToAsyncGenerator, StreamUtil } from "./utils/StreamU
 // Added for Qwen, Deepseek's COT (Chain of Thought) reasoning. (Ollama)
 interface AgenticaRequestBody extends OpenAI.ChatCompletionCreateParamsStreaming { 
   think?: boolean | undefined,
-  options: {
+  options?: {
     temperature?: number | undefined,
     top_p?: number | undefined,
   },
@@ -289,11 +289,14 @@ export class Agentica<Model extends ILlmSchema.Model> {
           // ===== Edited here =====
           // TODO: use custom ollama-xxx `Model` to auto-add extra options such as `think`
           // Added for Qwen, Deepseek's COT (Chain of Thought) reasoning + model configurations
-          think: this.props.config?.think ?? false,
-          options: {
-            temperature: this.props.config?.temperature ?? 0.7,
-            top_p: this.props.config?.top_p ?? 0.95,
-          },
+          // "Only for Ollama! for OpanAI and other platforms, it'll break"
+          ...(this.props.config?.think !== undefined
+              ? { think: this.props.config.think }
+              : {}),
+          
+          ...(Object.keys(this.props.config?.options ?? {}).length
+            ? { options: this.props.config?.options }
+            : {}),
         } as AgenticaRequestBody, // expand prev. body's type scope [added from original code]
         // === END Edited ===
         options: {

@@ -3,8 +3,8 @@ NOTES:
 @agentica from separate branch!
 */
 
-import { 
-  Agentica, 
+import {
+  Agentica,
   IAgenticaHistoryJson,
   IAgenticaExecutor
 } from "@agentica/core";
@@ -22,6 +22,9 @@ import typia, { Primitive } from "typia";
 import { SGlobal } from "./SGlobal";
 import type { ILlmSchema } from "@samchon/openapi/lib/structures/ILlmSchema";
 
+// HTTP logging setup
+import { setupFetchInterceptor } from "./utils/httpLogger";
+
 // tools
 import { BbsArticleService } from "./services/BbsArticleService";
 import { DockerodeService } from "./services/DockerodeService";
@@ -33,6 +36,9 @@ import { ollamaExecute } from "./OllamaOrchestrate/OllamaExecute";
 import { ollamaCancel } from "./OllamaOrchestrate/OllamaCancel";
 import { ollamaDescribe } from "./OllamaOrchestrate/OllamaDescribe";
 
+// Configuration
+const ENABLE_HTTP_LOGGING = false; // Set to false to disable HTTP request/response logging
+
 const getPromptHistories = async (
   id: string,
 ): Promise<Primitive<IAgenticaHistoryJson>[]> => {
@@ -42,6 +48,14 @@ const getPromptHistories = async (
 };
 
 const main = async (): Promise<void> => {
+  // Enable HTTP request logging (optional)
+  if (ENABLE_HTTP_LOGGING) {
+    setupFetchInterceptor();
+    console.log("=== HTTP request logging enabled ===");
+  } else {
+    console.log("=== HTTP request logging disabled ===");
+  }
+
   const BASE_URL: string = SGlobal.env.BASE_URL
 
   // model type here: --------------------------------------
@@ -57,14 +71,18 @@ const main = async (): Promise<void> => {
   > = new WebSocketServer();
 
   await server.open(
-    SGlobal.env.PORT, 
+    SGlobal.env.PORT,
     async (acceptor) => {
+      console.log(`New WebSocket connection from ${acceptor.ip} to path: ${acceptor.path}`);
+
       const url: URL = new URL(`http://localhost${acceptor.path}`);
+      console.log(`Parsed URL: ${url.toString()}`);
+
       const agent: Agentica<ModelType> = new Agentica<ModelType>(
         {
           model: modeltype,
           vendor: {
-            api: new OpenAI({ 
+            api: new OpenAI({
               apiKey: SGlobal.env.OPENAI_API_KEY, // dummy key
               /*
               BASE_URL Ollama server addr.:
@@ -77,10 +95,17 @@ const main = async (): Promise<void> => {
               Internal DNS(direct):
                 http://sylph.yeongmin.net:11434/v1
               */
-              baseURL: BASE_URL
+              baseURL: BASE_URL,
+
+              // Enable request/response logging
+              dangerouslyAllowBrowser: false,
+              defaultHeaders: {
+                'User-Agent': 'Dockerina-Agentica/1.0.0'
+
+              }
             }),
-            model: "qwen3-14b-4k" // ollama models (NO QWEN3 SCHEMA YET)
-            // model: "gpt-4o-mini" // chatgpt API
+            model: SGlobal.env.MODEL, // ollama models (NO QWEN3 SCHEMA YET)
+            // model: "gpt-4o-mini", "gpt-5-mini" // chatgpt API
           },
 
           config: {
@@ -129,7 +154,7 @@ const main = async (): Promise<void> => {
                 "You are an agent for cancelling functions which are prepared to call.",
                 "Use the supplied tools to select some functions to cancel of `getApiFunctions()` returned.",
                 "If you can't find any proper function to select, don't do anything.",
-                ].join("\n"),
+              ].join("\n"),
 
               // initialize: () => "",
             },
@@ -141,23 +166,27 @@ const main = async (): Promise<void> => {
               describe: ollamaDescribe,
             }),
 
-            // [Custom added parameters] NOTE: seems like it's unsupported for newest Ollama models...
-            // enable Chain of Thought reasoning
-            // (only for ollama's COT supported models)
+            // [Custom added parameters] 
+            // NOTE: seems like it's unsupported for newest Ollama models...
+            // enable Chain of Thought reasoning (only for ollama's supported models)
+            // REMOVE BELOW PROPERTY FOR OPENAI OR 3RD PARTY
+            /*
             think: true,
-            // LLM temperature and top_p
             temperature: 0.6,
             top_p: 1.0
+            */
           },
 
           // le' functions I add
           controllers: [
-            // {
-            //   protocol: "class",
-            //   name: "bbs",
-            //   application: typia.llm.application<BbsArticleService, ModelType>(),
-            //   execute: new BbsArticleService(),
-            // },
+            /*
+            {
+              protocol: "class",
+              name: "bbs",
+              application: typia.llm.application<BbsArticleService, ModelType>(),
+              execute: new BbsArticleService(),
+            },
+            */
             {
               protocol: "class",
               name: "dockerode",
@@ -181,8 +210,19 @@ const main = async (): Promise<void> => {
         }
       );
 
+      console.log(`Created AgenticaRpcService for connection`);
       await acceptor.accept(service);
+      console.log(`WebSocket connection accepted and service bound`);
     }
   );
+
+  console.log(`Agentica server started on port ${SGlobal.env.PORT}`);
+  console.log(`Base URL: ${BASE_URL}`);
+  console.log(`Model: ${SGlobal.env.MODEL}`);
+  console.log(`Waiting for WebSocket connections...`);
 };
-main().catch(console.error);
+main().catch((error) => {
+  console.error('Fatal error in main():', error);
+  console.error('Stack trace:', error.stack);
+  process.exit(1);
+});
