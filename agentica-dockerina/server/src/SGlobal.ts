@@ -28,7 +28,7 @@ const environments = new Singleton(() => {
   const parsedEnv: IEnvironments = {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "NO_KEY",
     BASE_URL: process.env.BASE_URL || "http://localhost:11434/v1",
-    MODEL: process.env.MODEL || "qwen3-14b-4k",
+    MODEL: process.env.MODEL || "qwen3:14b",
     PORT: process.env.PORT ? parseInt(process.env.PORT, 10) : 3000,
     DOCKER_HOST: process.env.DOCKER_HOST || "unix:///var/run/docker.sock",
     DOCKER_PORT: process.env.DOCKER_PORT ? parseInt(process.env.DOCKER_PORT, 10) : 2375,

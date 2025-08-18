@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Dockerina Web App Run Script
-# This script runs both the client and server components
 
 set -e  # Exit on any error
 
@@ -241,7 +240,7 @@ main() {
     echo "  Client: http://${CLIENT_HOST}:${CLIENT_PORT}"
     echo "  Server: http://${SERVER_HOST}:${SERVER_PORT}"
     echo ""
-    echo "Environment Variables (customize `.env` as needed):"
+    echo "Environment Variables (customize '.env' as needed):"
     echo "  • VITE_HOST=${CLIENT_HOST} (client host)"
     echo "  • VITE_PORT=${CLIENT_PORT} (client port)"
     echo "  • HOST=${SERVER_HOST} (server host)"

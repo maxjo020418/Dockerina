@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Dockerina Web App Build Script
-# This script sets up dependencies and builds the project
 
 set -e  # Exit on any error
 
@@ -75,7 +74,7 @@ setup_env_files() {
 # Dockerina Server Environment Configuration
 OPENAI_API_KEY=NO_KEY
 BASE_URL=http://localhost:11434/v1
-MODEL=qwen3-14b-4k
+MODEL=qwen3:14b
 PORT=3000
 DOCKER_HOST=unix:///var/run/docker.sock
 DOCKER_PORT=2375

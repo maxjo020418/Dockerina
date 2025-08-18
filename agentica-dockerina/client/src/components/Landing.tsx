@@ -1,5 +1,5 @@
 import { useState } from "react";
-import reactLogo from "../assets/react.svg";
+import ollamaLogo from "../assets/ollama.png";
 import agenticaLogo from "/agentica.svg";
 import { config } from "../config";
 
@@ -37,15 +37,15 @@ export function Landing() {
           </a>
           <span className="text-2xl font-bold text-gray-500">+</span>
           <a
-            href="https://react.dev"
+            href="https://ollama.com"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-all"
           >
             <img
-              src={reactLogo}
-              alt="React logo"
-              className="w-16 h-16 animate-[spin_10s_linear_infinite] transition-all hover:filter hover:drop-shadow-[0_0_1rem_#61dafbaa]"
+              src={ollamaLogo}
+              alt="Ollama logo"
+              className="w-16 h-16 transition-all hover:filter hover:drop-shadow-[0_0_1rem_rgba(255,255,255,0.5)]"
             />
           </a>
         </div>
