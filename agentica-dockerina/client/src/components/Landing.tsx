@@ -101,13 +101,13 @@ export function Landing() {
 
       {/* Portainer Console Iframe */}
       <div className="flex-1 min-h-0">
-        <div className="w-full h-full border border-gray-600 rounded-lg overflow-hidden shadow-2xl">
+        <div className="w-full h-full rounded-lg overflow-hidden shadow-2xl">
           <iframe
             src={portainerUrl}
-            className="w-full h-full"
+            className="w-full h-full border-0 rounded-lg"
             title="Portainer Console"
             allow="fullscreen"
-            style={{ minHeight: '600px' }}
+            style={{ minHeight: '600px', border: 'none' }}
           />
         </div>
       </div>

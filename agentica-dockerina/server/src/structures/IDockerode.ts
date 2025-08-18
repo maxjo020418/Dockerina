@@ -174,3 +174,23 @@ export interface ISimpleContainerLog { // from ContainerInspectInfo.State.Health
         Output: string;
     }>;
 }
+
+/**
+ * Container exec output stream
+ */
+export interface IContainerOutStream {
+    /**
+     * Exit code of the container process
+     */
+    ExitCode: number,
+
+    /**
+     * Standard output stream of the container process
+     */
+    StdOut: string,
+
+    /**
+     * Standard error stream of the container process
+     */
+    StdErr: string,
+}
