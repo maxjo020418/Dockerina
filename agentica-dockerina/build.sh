@@ -84,11 +84,17 @@ EOF
         print_warning "server/.env already exists, skipping creation"
     fi
     
-    # Client .env file (if example exists)
-    if [ -f "client/.env.example" ] && [ ! -f "client/.env" ]; then
-        print_status "Creating client/.env from example..."
-        cp client/.env.example client/.env
-        print_success "Created client/.env file"
+    # Client .env file
+    if [ ! -f "client/.env" ]; then
+        print_status "Creating client/.env file..."
+        cat > client/.env << EOF
+# Dockerina Client Environment Configuration
+VITE_AGENTICA_WS_URL=ws://localhost:3000/chat
+# VITE_PORTAINER_URL=http://localhost:9000
+EOF
+        print_success "Created client/.env file with default values"
+    else
+        print_warning "client/.env already exists, skipping creation"
     fi
 }
 
@@ -117,13 +123,13 @@ build_project() {
     pnpm install
     pnpm build
     cd ..
-    
-    print_success "All dependencies installed and built successfully"
+
+    print_success "✅ All dependencies installed and built successfully"
 }
 
 # Main execution
 main() {
-    echo "🔨 Dockerina Web App Build Script"
+    echo "Dockerina Web App Build Script"
     echo "=================================="
     echo ""
     
@@ -149,11 +155,11 @@ main() {
     build_project
     
     echo ""
-    print_success "🎉 Build completed successfully!"
+    print_success "✅ Build completed successfully!"
     echo ""
     echo "Next steps:"
-    echo "  🚀 Run the application: ./run.sh"
-    echo "  🛑 Stop services: ./stop.sh"
+    echo "  Run the application: ./run.sh"
+    echo "  Stop services: ./stop.sh"
     echo ""
 }
 

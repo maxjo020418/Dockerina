@@ -179,7 +179,7 @@ wait_for_service() {
 # Main run function
 main() {
     echo ""
-    echo "🚀 Dockerina Web App Runner"
+    echo "Dockerina Web App Runner"
     echo "============================"
     echo ""
     
@@ -237,11 +237,11 @@ main() {
     echo ""
     print_success "✅ Both services are running!"
     echo ""
-    echo "📦 Service URLs:"
-    echo "  🖥️  Client: http://${CLIENT_HOST}:${CLIENT_PORT}"
-    echo "  ⚙️  Server: http://${SERVER_HOST}:${SERVER_PORT}"
+    echo "Service URLs:"
+    echo "  Client: http://${CLIENT_HOST}:${CLIENT_PORT}"
+    echo "  Server: http://${SERVER_HOST}:${SERVER_PORT}"
     echo ""
-    echo "🔧 Environment Variables (customize as needed):"
+    echo "Environment Variables (customize `.env` as needed):"
     echo "  • VITE_HOST=${CLIENT_HOST} (client host)"
     echo "  • VITE_PORT=${CLIENT_PORT} (client port)"
     echo "  • HOST=${SERVER_HOST} (server host)"

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Dockerina Web App Stop Script
-# This script stops both the client and server services
 
 # Colors for output
 RED='\033[0;31m'
@@ -26,7 +25,39 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-echo "🛑 Stopping Dockerina Web App Services"
+# Function to get server port from .env file
+get_server_port() {
+    local port=3000  # default fallback
+    if [ -f "server/.env" ]; then
+        local env_port=$(grep "^PORT=" server/.env | cut -d'=' -f2)
+        if [ ! -z "$env_port" ]; then
+            port=$env_port
+        fi
+    fi
+    echo $port
+}
+
+# Function to get client port from vite config or environment
+get_client_port() {
+    local port=5173  # vite default fallback
+    
+    # Try to extract port from vite.config.ts if it exists
+    if [ -f "client/vite.config.ts" ]; then
+        local config_port=$(grep -o "port.*[0-9]\+" client/vite.config.ts | grep -o "[0-9]\+" | head -1)
+        if [ ! -z "$config_port" ]; then
+            port=$config_port
+        fi
+    fi
+    
+    # Check environment variable (takes precedence)
+    if [ ! -z "${VITE_PORT}" ]; then
+        port=$VITE_PORT
+    fi
+    
+    echo $port
+}
+
+echo "Stopping Dockerina Web App Services"
 echo "======================================"
 
 # Stop server
@@ -62,8 +93,14 @@ fi
 # Also kill any remaining node processes that might be related
 print_status "Checking for any remaining processes..."
 
-# Kill any processes on ports 3000 and 5173
-for port in 3000 5173; do
+# Get ports from environment
+SERVER_PORT=$(get_server_port)
+CLIENT_PORT=$(get_client_port)
+
+print_status "Checking for processes on server port $SERVER_PORT and client port $CLIENT_PORT..."
+
+# Kill any processes on the configured ports
+for port in $SERVER_PORT $CLIENT_PORT; do
     PID=$(lsof -ti:$port 2>/dev/null || true)
     if [ ! -z "$PID" ]; then
         print_status "Killing process on port $port (PID: $PID)"
@@ -79,6 +116,3 @@ if [ "$1" = "--clean" ]; then
     rm -rf logs/
     print_success "Log files cleaned"
 fi
-
-echo ""
-echo "To restart the application, run: ./setup.sh"
