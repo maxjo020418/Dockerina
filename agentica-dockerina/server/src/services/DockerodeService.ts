@@ -255,16 +255,19 @@ export class DockerodeService {
     /**
      * Creates and starts a Docker container with Dockerina prefix
      * @param image Docker image full name
-     * @param name Container name (will be prefixed with "Dockerina-")
+     * @param name Container nickname (will be prefixed with "Dockerina-")
      * @param command Command to run in container (optional)
      * @param env Environment variables as key-value pairs (optional)
+     * @param ports Port mappings (optional) - Array of strings: ["8000", "3000:3001", "127.0.0.1:8080:80"]
      */
     public async runContainer(params: { 
         image: string;
         name?: string;
         command?: string[];
         env?: Record<string, string>;
+        ports?: string[];
     }): Promise<Docker.Container> {
+        console.log(`[DockerodeService.ts] Creating Docker container:\n${JSON.stringify(params)}`);
         try {
             const containerName = params.name ? `Dockerina-${params.name}` : `Dockerina-${Date.now()}`;
             
@@ -273,12 +276,54 @@ export class DockerodeService {
                 Object.entries(params.env).map(([key, value]) => `${key}=${value}`) : 
                 undefined;
             
+            // Process port bindings if provided
+            let portBindings: Docker.PortMap | undefined;
+            let exposedPorts: { [port: string]: {} } | undefined;
+            
+            if (params.ports && params.ports.length > 0) {
+                portBindings = {};
+                exposedPorts = {};
+                
+                for (const portSpec of params.ports) {
+                    if (portSpec.includes(':')) {
+                        // Format: "hostPort:containerPort" or "hostIP:hostPort:containerPort"
+                        const parts = portSpec.split(':');
+                        let hostPort: string;
+                        let containerPort: string;
+                        
+                        if (parts.length === 2) {
+                            // "hostPort:containerPort"
+                            [hostPort, containerPort] = parts;
+                            portBindings[`${containerPort}/tcp`] = [{ HostPort: hostPort }];
+                        } else if (parts.length === 3) {
+                            // "hostIP:hostPort:containerPort"
+                            const [hostIP, hostPortStr, containerPortStr] = parts;
+                            portBindings[`${containerPortStr}/tcp`] = [{ HostIp: hostIP, HostPort: hostPortStr }];
+                            containerPort = containerPortStr;
+                        } else {
+                            throw new Error(`Invalid port specification: ${portSpec}. Use format "hostPort:containerPort" or "hostIP:hostPort:containerPort"`);
+                        }
+                        
+                        exposedPorts[`${containerPort}/tcp`] = {};
+                    } else {
+                        // Format: just container port - Docker will assign random host port
+                        const containerPort = portSpec;
+                        portBindings[`${containerPort}/tcp`] = [{}];
+                        exposedPorts[`${containerPort}/tcp`] = {};
+                    }
+                }
+            }
+            
             const container = await this.docker.createContainer({
                 Image: params.image,
                 Cmd: params.command || [],
                 name: containerName,
                 Env: envArray,
                 Tty: false,
+                ExposedPorts: exposedPorts,
+                HostConfig: {
+                    PortBindings: portBindings,
+                },
             });
             await container.start();
             console.log(`[DockerodeService.ts] Docker container "${containerName}" with image ${params.image} created and started successfully.`);
