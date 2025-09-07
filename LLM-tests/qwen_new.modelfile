@@ -15,8 +15,8 @@
     repeat_penalty    1                 
     stop              "<|im_start|>"    
     stop              "<|im_end|>"      
-    temperature       0.6               
-    top_k             20                
+    temperature       0.4               
+    top_k             10                
 
   License
     Apache License               

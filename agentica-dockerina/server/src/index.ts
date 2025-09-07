@@ -108,7 +108,7 @@ const main = async (): Promise<void> => {
             // model: "gpt-4o-mini", "gpt-5-mini" // chatgpt API
           },
 
-          config: {
+            config: {
             // local/TZ is just inserted into prompt, 
             // don't need to comply to specific formats
             // only used for AgenticaSystemPrompt.COMMON
@@ -133,14 +133,14 @@ const main = async (): Promise<void> => {
 
               select: () => [
                 "You are a helpful agent that can select functions to call.",
-                "Use the supplied `selectFunctions` function to select the functions provided by getApiFunctions.",
+                "When calling functions, always call `selectFunctions` to choose functions from getApiFunctions.",
                 "If you don't need to or can't use functions, do your best within your abilities."
               ].join("\n"),
 
               execute: () => [  // call.ts
                 "You are an agent that calls the functions provided.",
-                "If the context provided lacks information to create arguments for the function, you must ask the user for more information.",
-                "But if the information is insufficient but you believe you can accurately infer and fill in the parameters or arguments, do so accordingly."
+                "Prefer calling a tool over answering in prose.",
+                "If context lacks info to fill arguments, ask a concise follow-up question.",
               ].join("\n"),
 
               describe: () => [
@@ -175,6 +175,9 @@ const main = async (): Promise<void> => {
             temperature: 0.6,
             top_p: 1.0
             */
+
+            // Serialized calls: present one tool per turn
+            serializeCalls: true,
           },
 
           // le' functions I add

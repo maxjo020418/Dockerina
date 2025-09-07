@@ -123,6 +123,17 @@ export interface IAgenticaConfig<Model extends ILlmSchema.Model> {
 
 
   // =========== edited here ===========
+  /**
+   * Serialize function calls: one tool per turn.
+   *
+   * When true, the call phase will present only a single operation to the
+   * model per iteration and force calling that tool, executing remaining
+   * operations in subsequent iterations. When false, multiple operations
+   * can be presented at once and the model may choose among them.
+   *
+   * @default false
+   */
+  serializeCalls?: boolean;
 
   /**
    * Chain of Thought reasoning. (added for ollama)

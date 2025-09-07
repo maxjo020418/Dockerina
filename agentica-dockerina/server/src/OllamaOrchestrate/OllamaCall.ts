@@ -51,7 +51,8 @@ import {
   cancelFunctionFromContext,
 } from "@agentica/core";
 
-// import { parseThinkToBlockquote } from "../utils/thinkParser";
+import { v4 as uuidv4 } from "uuid";
+import { extractThinkBlocks, parseRawJsonAfterThink, parseToolCallFromContent } from "../utils/toolCallFallback";
 
 export async function ollamaCall<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model>, // | MicroAgenticaContext<Model>,
@@ -128,7 +129,12 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
           },
         }) as OpenAI.ChatCompletionTool,
     ),
-    tool_choice: "auto",
+    tool_choice: operations.length === 1
+      ? {
+          type: "function",
+          function: { name: operations[0]!.name },
+        }
+      : "auto",
     // parallel_tool_calls: false,
   });
 
@@ -140,8 +146,15 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
   const executes: AgenticaExecuteEvent<Model>[] = [];
 
   for (const choice of completion.choices) {
+    // Normal tool_calls path
+    let processedAny = false;
+    let manualFallbackTriggered = false;
+    const seen = new Set<string>();
     for (const tc of choice.message.tool_calls ?? []) {
       if (tc.type === "function") {
+        const sig = `${tc.function.name}|${tc.function.arguments}`;
+        if (seen.has(sig)) continue;
+        seen.add(sig);
         const operation: AgenticaOperation<Model> | undefined
             = ctx.operations.flat.get(tc.function.name);
         if (operation === undefined) {
@@ -180,13 +193,82 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
           });
           console.log("[OllamaCall.ts] calling:", call.operation.name)
         }
+        processedAny = true;
       }
     }
-    // convert to msg string
+    // ================= EDITED HERE!!! (fallbacks) =================
+    // Fallback path 1: some models emit tool calls in text content
+    if (!processedAny && typeof choice.message.content === "string") {
+      const embedded = parseToolCallFromContent(choice.message.content);
+      for (const obj of embedded) {
+        const sig = `${obj.name}|${JSON.stringify(obj.arguments)}`;
+        if (seen.has(sig)) continue;
+        seen.add(sig);
+        const operation = ctx.operations.flat.get(obj.name);
+        if (!operation) continue;
+        const call = createCallEvent({ id: uuidv4(), operation, arguments: obj.arguments });
+        if (call.operation.protocol === "http") {
+          fillHttpArguments({ operation: call.operation, arguments: call.arguments });
+        }
+        ctx.dispatch(call);
+        const exec = await propagate(ctx, call, 0);
+        ctx.dispatch(exec);
+        executes.push(exec);
+        if (isAgenticaContext(ctx)) {
+          cancelFunctionFromContext(ctx, { name: call.operation.name, reason: "completed" });
+        }
+        processedAny = true;
+      }
+    }
+
+    // Fallback path 2: plain JSON after <think> without <tool_call>
+    if (!processedAny && typeof choice.message.content === "string") {
+      const parsed = parseRawJsonAfterThink(choice.message.content);
+      if (parsed) {
+        const sig = `${parsed.name}|${JSON.stringify(parsed.arguments)}`;
+        if (!seen.has(sig)) {
+          const operation = ctx.operations.flat.get(parsed.name);
+          if (operation) {
+            console.warn("[OllamaCall.ts] WARNING: Detected raw tool call JSON outside <tool_call>. Executing manually.");
+            const call = createCallEvent({ id: uuidv4(), operation, arguments: parsed.arguments });
+            if (call.operation.protocol === "http") {
+              fillHttpArguments({ operation: call.operation, arguments: call.arguments });
+            }
+            ctx.dispatch(call);
+            const exec = await propagate(ctx, call, 0);
+            ctx.dispatch(exec);
+            executes.push(exec);
+            if (isAgenticaContext(ctx)) {
+              cancelFunctionFromContext(ctx, { name: call.operation.name, reason: "completed" });
+            }
+            seen.add(sig);
+            processedAny = true;
+            manualFallbackTriggered = true;
+          }
+        }
+      }
+    }
+    
+    // If manual fallback triggered, remove the raw json string (so that it only shows the <think> part)
+    if (manualFallbackTriggered === true && typeof choice.message.content === "string") {
+      const thinks = extractThinkBlocks(choice.message.content);
+      if (thinks.length > 0) {
+        const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
+          get: () => "## *CALL AGENT*\n\n" + thinks,
+          done: () => true,
+          stream: toAsyncGenerator(thinks),
+          join: async () => Promise.resolve(thinks),
+        });
+        ctx.dispatch(event);
+      }
+    }
+
+    // convert to msg string (normal operations)
     if (
       choice.message.role === "assistant"
       && choice.message.content != null
       && choice.message.content.length !== 0
+      && manualFallbackTriggered === false
     ) {
       const text: string = choice.message.content;
       const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({

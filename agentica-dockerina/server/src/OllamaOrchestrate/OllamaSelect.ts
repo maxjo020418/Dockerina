@@ -36,6 +36,7 @@ import {
   // internal
   selectFunctionFromContext,
 } from "@agentica/core";
+import { extractThinkBlocks, parseRawJsonAfterThink, parseToolCallFromContent } from "../utils/toolCallFallback";
 
 // import { parseThinkToBlockquote } from "../utils/thinkParser";
 
@@ -208,14 +209,13 @@ async function step<Model extends ILlmSchema.Model>(
         parameters: CONTAINER.functions[0]!.parameters as unknown as Record<string, unknown>,
       },
     } satisfies OpenAI.ChatCompletionTool],
-    tool_choice: retry === 0
-      ? "auto"
-      : {
-          type: "function",
-          function: {
-            name: CONTAINER.functions[0]!.name,
-          },
-        },
+    // Force using selectFunctions to avoid chatty answers
+    tool_choice: {
+      type: "function",
+      function: {
+        name: CONTAINER.functions[0]!.name,
+      },
+    },
     // parallel_tool_calls: false,
   });
 
@@ -253,6 +253,8 @@ async function step<Model extends ILlmSchema.Model>(
   // PROCESS COMPLETION
   // ----
   for (const choice of completion.choices) {
+    let processedAny = false;
+    let manualFallbackTriggered = false;
     // FUNCTION CALLING
     if (choice.message.tool_calls != null) {
       for (const tc of choice.message.tool_calls) {
@@ -273,6 +275,34 @@ async function step<Model extends ILlmSchema.Model>(
         for (const reference of input.functions) {
           selectFunctionFromContext(ctx, reference);
         }
+        processedAny = true;
+      }
+    }
+
+    // Fallback 1: <tool_call> JSON embedded in content
+    if (!processedAny && typeof choice.message.content === "string") {
+      const embedded = parseToolCallFromContent(choice.message.content, { expectName: "selectFunctions" });
+      for (const obj of embedded) {
+        const input = typia.json.isParse<__IChatFunctionReference.IProps>(JSON.stringify(obj.arguments));
+        if (input) {
+          for (const reference of input.functions) selectFunctionFromContext(ctx, reference);
+          processedAny = true;
+          manualFallbackTriggered = true;
+        }
+      }
+    }
+
+    // Fallback 2: plain JSON after <think>
+    if (!processedAny && typeof choice.message.content === "string") {
+      const parsed = parseRawJsonAfterThink(choice.message.content, { expectName: "selectFunctions" });
+      if (parsed) {
+        const input = typia.json.isParse<__IChatFunctionReference.IProps>(JSON.stringify(parsed.arguments));
+        if (input) {
+          console.warn("[OllamaSelect.ts] WARNING: Detected raw selectFunctions JSON outside <tool_call>. Executing manually.");
+          for (const reference of input.functions) selectFunctionFromContext(ctx, reference);
+          processedAny = true;
+          manualFallbackTriggered = true;
+        }
       }
     }
 
@@ -282,6 +312,7 @@ async function step<Model extends ILlmSchema.Model>(
       choice.message.role === "assistant"
       && choice.message.content != null
       && choice.message.content.length !== 0
+      && manualFallbackTriggered === false
     ) {
       const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
         stream: toAsyncGenerator(choice.message.content),
@@ -290,6 +321,20 @@ async function step<Model extends ILlmSchema.Model>(
         get: () => "## *SELECT AGENT*\n\n" + choice.message.content!, // string
       });
       ctx.dispatch(event);
+    }
+
+    // If manual fallback triggered, echo only the <think> blocks
+    if (manualFallbackTriggered === true && typeof choice.message.content === "string") {
+      const thinks = extractThinkBlocks(choice.message.content);
+      if (thinks.length > 0) {
+        const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
+          stream: toAsyncGenerator(thinks),
+          join: async () => Promise.resolve(thinks),
+          done: () => true,
+          get: () => "## *SELECT AGENT*\n\n" + thinks,
+        });
+        ctx.dispatch(event);
+      }
     }
   }
 }

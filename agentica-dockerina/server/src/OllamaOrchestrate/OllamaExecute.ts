@@ -61,9 +61,18 @@ export function ollamaExecute<Model extends ILlmSchema.Model>(executor: Partial<
     const allExecutes: AgenticaExecuteEvent<Model>[] = [];
     while (true) {
       // EXECUTE FUNCTIONS
+      // ======== EDITED HERE TO SERIALIZE CALLS ========
+      // If serializeCalls is true, call functions ONE AT A TIME per loop, rather than all at once
+      // Otherwise, call all functions in the stack (like the original behavior)
+      // ================================================
+      const operations = (
+        ctx.config?.serializeCalls === true && ctx.stack.length > 0
+          ? [ctx.stack[0]!.operation]
+          : ctx.stack.map(s => s.operation)
+      );
       const executes: AgenticaExecuteEvent<Model>[] = await (
         executor?.call ?? call
-      )(ctx, ctx.stack.map(s => s.operation));
+      )(ctx, operations);
 
       // Collect all executes for later description
       allExecutes.push(...executes);
@@ -75,8 +84,8 @@ export function ollamaExecute<Model extends ILlmSchema.Model>(executor: Partial<
       else {
         // CANCEL CANDIDATE FUNCTIONS
         await (executor?.cancel ?? cancel)(ctx);
-        
       }
+
       console.log("[OllamaExecute.ts] `ctx.stack.length` is now <", ctx.stack.length, ">");
     }
 

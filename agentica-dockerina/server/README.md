@@ -139,6 +139,10 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 
 10. (UI) User can still send message WHILE the model is generating... (block send button like when `Failed to connect to Agentica server`)
 
+11. **\[RESOLVED\] - added sentinel to monitor tools calls and fix broken tool calls (@toolCallFallback and more)** plus, one tool call at a time is enforced, not multiple tool calls at once to avoid context filling and confusion
+
+12. if functions are canceled(via `OllamaCancel`) the chat ends abruptly(only think block @ call process), perhaps fallback to `OllamaDescribe` and explain or end convo gracefully.
+
 ---
 
 <u>**Interaction notes for \#3: (Problematic ones - function being called multiple times *separately*)**</u>
