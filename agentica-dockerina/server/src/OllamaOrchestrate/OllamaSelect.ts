@@ -27,7 +27,7 @@ import {
 
   // factory
   decodeHistory, decodeUserMessageContent,
-  creatAssistantMessageEvent,
+  createAssistantMessageEvent,
 
   // utils
   StreamUtil, toAsyncGenerator,
@@ -37,8 +37,6 @@ import {
   selectFunctionFromContext,
 } from "@agentica/core";
 import { extractThinkBlocks, parseRawJsonAfterThink, parseToolCallFromContent } from "../utils/toolCallFallback";
-
-// import { parseThinkToBlockquote } from "../utils/thinkParser";
 
 import type { __IChatFunctionReference } from "../function-refs/__IChatFunctionReference"
 import type { __IChatSelectFunctionsApplication } from "../function-refs/__IChatSelectFunctionsApplication"
@@ -314,7 +312,7 @@ async function step<Model extends ILlmSchema.Model>(
       && choice.message.content.length !== 0
       && manualFallbackTriggered === false
     ) {
-      const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
+      const event: AgenticaAssistantMessageEvent = createAssistantMessageEvent({
         stream: toAsyncGenerator(choice.message.content),
         join: async () => Promise.resolve(choice.message.content!),
         done: () => true,
@@ -327,7 +325,7 @@ async function step<Model extends ILlmSchema.Model>(
     if (manualFallbackTriggered === true && typeof choice.message.content === "string") {
       const thinks = extractThinkBlocks(choice.message.content);
       if (thinks.length > 0) {
-        const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
+        const event: AgenticaAssistantMessageEvent = createAssistantMessageEvent({
           stream: toAsyncGenerator(thinks),
           join: async () => Promise.resolve(thinks),
           done: () => true,

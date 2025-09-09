@@ -38,7 +38,7 @@ import {
   isAgenticaContext,
 
   // factory/events
-  creatAssistantMessageEvent, createCallEvent, createExecuteEvent, createValidateEvent,
+  createAssistantMessageEvent, createCallEvent, createExecuteEvent, createValidateEvent,
   // factory/histories
   decodeHistory, decodeUserMessageContent,
 
@@ -253,7 +253,7 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
     if (manualFallbackTriggered === true && typeof choice.message.content === "string") {
       const thinks = extractThinkBlocks(choice.message.content);
       if (thinks.length > 0) {
-        const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
+        const event: AgenticaAssistantMessageEvent = createAssistantMessageEvent({
           get: () => "## *CALL AGENT*\n\n" + thinks,
           done: () => true,
           stream: toAsyncGenerator(thinks),
@@ -271,7 +271,7 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
       && manualFallbackTriggered === false
     ) {
       const text: string = choice.message.content;
-      const event: AgenticaAssistantMessageEvent = creatAssistantMessageEvent({
+      const event: AgenticaAssistantMessageEvent = createAssistantMessageEvent({
         get: () => "## *CALL AGENT*\n\n" + text,
         done: () => true,
         stream: toAsyncGenerator(text),

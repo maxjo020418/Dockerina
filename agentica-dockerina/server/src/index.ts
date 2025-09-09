@@ -133,25 +133,30 @@ const main = async (): Promise<void> => {
 
               select: () => [
                 "You are a helpful agent that can select functions to call.",
-                "When calling functions, always call `selectFunctions` to choose functions from getApiFunctions.",
-                "If you don't need to or can't use functions, do your best within your abilities."
+                // "When calling functions, always call `selectFunctions` to choose functions from getApiFunctions.",
+                "If you don't need to or can't use functions, do your best within your abilities.",
+                "when asked about your abilities, list all functions you can call.",
               ].join("\n"),
 
               execute: () => [  // call.ts
-                "You are an agent that calls the functions provided.",
+                "You call the functions provided.",
                 "Prefer calling a tool over answering in prose.",
                 "If context lacks info to fill arguments, ask a concise follow-up question.",
               ].join("\n"),
 
               describe: () => [
-                "You are an agent describing return values from function calls.",
-                "There should be previous histories of function calls above.",
-                "format as markdown",
-                "Provide TL;DR of the result in the end."
+                "You describe results of function calls using the call history above.",
+                "\n",
+                "FORMAT:",
+                "1) detailed description of results, cleanly formatted as markdown.",
+                "2) <tldr>…</tldr> and nothing after it.",
+                "3) Final line: Zero or more <question>…?</question> lines (all questions must be here).",
+                "\n",
+                "Rules: Simple sentences. No questions outside <question>."
               ].join("\n"),
 
               cancel: () => [
-                "You are an agent for cancelling functions which are prepared to call.",
+                "You cancel functions which are prepared to call. (if needed)",
                 "Use the supplied tools to select some functions to cancel of `getApiFunctions()` returned.",
                 "If you can't find any proper function to select, don't do anything.",
               ].join("\n"),

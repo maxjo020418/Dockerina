@@ -6,9 +6,6 @@ import type {
     AgenticaContext,
     MicroAgenticaContext,
 
-    // events
-    AgenticaDescribeEvent,
-
     // histories
     AgenticaExecuteHistory,
 } from "@agentica/core"
@@ -19,16 +16,14 @@ import {
     AgenticaSystemPrompt,
 
     // factory
-    createDescribeEvent,
     decodeHistory,
+    createAssistantMessageEvent,
 
     // utils
     ChatGptCompletionMessageUtil,
     MPSC,
     streamDefaultReaderToAsyncGenerator, StreamUtil,
 } from "@agentica/core"
-
-// import { parseThinkToBlockquote } from "../utils/thinkParser";
 
 export async function ollamaDescribe<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model> | MicroAgenticaContext<Model>,
@@ -98,11 +93,10 @@ export async function ollamaDescribe<Model extends ILlmSchema.Model>(
         };
         mpsc.produce(choice.delta.content);
 
-        const event: AgenticaDescribeEvent<Model> = createDescribeEvent({
-          executes: histories,
+        const event = createAssistantMessageEvent({
           stream: streamDefaultReaderToAsyncGenerator(mpsc.consumer.getReader()),
           done: () => mpsc.done(),
-          get: () => "## *DESCRIBE AGENT*\n\n" 
+          get: () => "## *DESCRIBE AGENT*\n\n"
             + (describeContext[choice.index]?.content ?? ""),
           join: async () => {
             await mpsc.waitClosed();
@@ -122,7 +116,3 @@ export async function ollamaDescribe<Model extends ILlmSchema.Model>(
     return ChatGptCompletionMessageUtil.accumulate(acc, chunk);
   });
 }
-
-export const ChatGptDescribeFunctionAgent = {
-  execute: ollamaDescribe,
-};

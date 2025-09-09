@@ -62,9 +62,21 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
     in raw ChatML, sysprompts are not ordered the same use chat histories. The default prompt is in an odd position. (**Prompt sentence has been changed from the above default.**)
     which can/might confuse the model, needs smth like `if len(histories) <= 0 then "different prompt"`
 
-2. responses from `describe.ts` doesn't seem to be included in history. **Function call histories are provided to agents** BUT follow-up actions and error/problems reported by `describe.ts` is not conveyed which causes problems. **(not planned to be fixed to reduce context size for now)**
+2. **\[RESOLVED\]** - responses from `describe.ts` doesn't seem to be included in history. **Function call histories are provided to agents** BUT follow-up actions and error/problems reported by `describe.ts` is not conveyed which causes problems. ~~(not planned to be fixed to reduce context size for now)~~
 
-3. **\[RESOLVED\] - \*(check notes)** (mostly I think) Multiple function calls in some cases.
+    sysprompt was edited to include tldr and follow-up questions within designated tags, later to be parsed and seperately added to history. (in turn reducing the context size)
+    ```
+    <think> ... </think>
+    {main response, description of function call results ...}
+    <tldr>...</tldr>
+    <question>...?</question> (may be multiple)
+    ```
+    ***only tldr and questions are added to history (as agent response) for follow-up and summary, rest is ignored (only shown in chat msg to user)***
+    (`createDescribeEvent` $\rightarrow$ `createAssistantMessageEvent`)
+
+    Same implementation as no.6 and no.7 (think stripping and formatting) just for different xml tags.
+
+3. **\[RESOLVED\] - \*(check notes)** (mostly I think) Unwanted Multiple function calls in some cases.
 
 4. **\[RESOLVED\]** ~~broken function calls being filtered by ollama and ending the thinking process.~~ (**Edit**: Issue mostly resolved via prompting/context reduction and also [Ollama team working on fix](https://github.com/ollama/ollama/issues/11381).) 
 
@@ -137,7 +149,7 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 
 9. **\[RESOLVED\] - (edited `OllamaExecute`)** Function call loop calls `OllamaDescribe.ts` EVERY TIME in the f-call loop.
 
-10. (UI) User can still send message WHILE the model is generating... (block send button like when `Failed to connect to Agentica server`)
+10. (UI change) User can still send message WHILE the model is generating... (block send button like when `Failed to connect to Agentica server`)
 
 11. **\[RESOLVED\] - added sentinel to monitor tools calls and fix broken tool calls (@toolCallFallback and more)** plus, one tool call at a time is enforced, not multiple tool calls at once to avoid context filling and confusion
 

@@ -194,7 +194,7 @@ export function createUserMessageEvent(props: {
   };
 }
 
-export function creatAssistantMessageEvent(props: {
+export function createAssistantMessageEvent(props: {
   stream: AsyncGenerator<string, undefined, undefined>;
   done: () => boolean;
   get: () => string;

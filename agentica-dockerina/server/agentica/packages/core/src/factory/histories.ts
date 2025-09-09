@@ -19,6 +19,22 @@ function stripThink(text: string): string {
   return text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 }
 
+function reduceToTldrAndQuestions(text: string): string | null {
+  // If no <tldr>, do not reduce
+  const tldrMatch = text.match(/<tldr>[\s\S]*?<\/tldr>/i);
+  if (!tldrMatch) return null;
+
+  // Collect TLDR and all <question> blocks
+  const stripTag = (s: string, tag: string) => s.replace(new RegExp(`<\\/?${tag}>`, "gi"), "").trim();
+  const tldr = stripTag(tldrMatch[0]!, "tldr");
+  const questions = Array.from(text.matchAll(/<question>[\s\S]*?<\/question>/gi))
+    .map(m => stripTag(m[0]!, "question"))
+    .filter(s => s.length > 0);
+
+  const parts = [tldr, ...questions].filter(p => p && p.length > 0);
+  return parts.length ? parts.join("\n") : null;
+}
+
 // internal (** removed JSDoc for external access **)
 export function decodeHistory<Model extends ILlmSchema.Model>(history: AgenticaHistory<Model>): OpenAI.ChatCompletionMessageParam[] {
   // NO NEED TO DECODE DESCRIBE
@@ -97,10 +113,12 @@ export function decodeHistory<Model extends ILlmSchema.Model>(history: AgenticaH
   }
 
   if (history.type === "assistantMessage") {
+    const noThink = stripThink(history.text);
+    const reduced = reduceToTldrAndQuestions(noThink);
     return [
       {
         role: "assistant",
-        content: stripThink(history.text),
+        content: reduced ?? noThink,
       },
     ];
   }
