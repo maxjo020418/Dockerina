@@ -72,19 +72,19 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
     <question>...?</question> (may be multiple)
     ```
     ***only tldr and questions are added to history (as agent response) for follow-up and summary, rest is ignored (only shown in chat msg to user)***
-    (`createDescribeEvent` $\rightarrow$ `createAssistantMessageEvent`)
+    (`createDescribeEvent` $\rightarrow$ s`createAssistantMessageEvent`)
 
-    Same implementation as no.6 and no.7 (think stripping and formatting) just for different xml tags.
+    Same implementation as no.6 and no.7 (think stripping and formatting) just for different xml tags. Formatted in chat as `parseAndFormatSpecialTags` @ `agentica-dockerina/client/src/components/chat/ChatMessage.tsx`
 
 3. **\[RESOLVED\] - \*(check notes)** (mostly I think) Unwanted Multiple function calls in some cases.
 
 4. **\[RESOLVED\]** ~~broken function calls being filtered by ollama and ending the thinking process.~~ (**Edit**: Issue mostly resolved via prompting/context reduction and also [Ollama team working on fix](https://github.com/ollama/ollama/issues/11381).) 
 
-5. **\[RESOLVED\]** <u>`getApiFunctions` getting cut out when chat gets too long (out of context window), include in sysprompt or put it at last.</u>
+5. **\[RESOLVED\]** <u>`getApiFunctions` getting cut out when chat gets too long (out of context window), include in sysprompt or put it at last.</u> - solved by putting it at last in the prompt (after chat histories)
 
 6. **\[RESOLVED\] - (`stripThink` @ `agentica-dockerina/server/agentica/packages/core/src/factory/histories.ts`)** remove `<think>` tagged content from history (mostly irrelevant and massively fills up context window)
 
-7. **\[RESOLVED\] - (`parseThinkToBlockquote` @ `agentica-dockerina/client/src/components/chat/ChatMessage.tsx`)**
+7. **\[RESOLVED\] - (`parseAndFormatSpecialTags` ~~`parseThinkToBlockquote`~~ @ `agentica-dockerina/client/src/components/chat/ChatMessage.tsx`)**
   alongside no.6, format the content including `<think>` to separate from regular response
 
 8. **\[RESOLVED\] - (edited `decodeHistory` @ `agentica-dockerina/server/agentica/packages/core/src/factory/histories.ts`)**`<tool_response>` is too long, (exceeding context window size, sometimes for a single request) <u>top level `output` field might be okay to purge during prompt (only contains return type info)</u>:
@@ -153,7 +153,7 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 
 11. **\[RESOLVED\] - added sentinel to monitor tools calls and fix broken tool calls (@toolCallFallback and more)** plus, one tool call at a time is enforced, not multiple tool calls at once to avoid context filling and confusion
 
-12. if functions are canceled(via `OllamaCancel`) the chat ends abruptly(only think block @ call process), perhaps fallback to `OllamaDescribe` and explain or end convo gracefully.
+12. if functions are canceled(via `OllamaCancel`) the chat ends abruptly(only think block @ call process), perhaps fallback to `OllamaDescribe` and explain(structured feedback from OllamaCancel) or end convo gracefully.
 
 ---
 

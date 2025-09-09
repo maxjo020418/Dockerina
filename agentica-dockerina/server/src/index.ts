@@ -135,7 +135,7 @@ const main = async (): Promise<void> => {
                 "You are a helpful agent that can select functions to call.",
                 // "When calling functions, always call `selectFunctions` to choose functions from getApiFunctions.",
                 "If you don't need to or can't use functions, do your best within your abilities.",
-                "when asked about your abilities, list all functions you can call.",
+                // "when asked about your abilities, reply with all functions you can call.",
               ].join("\n"),
 
               execute: () => [  // call.ts
@@ -149,7 +149,7 @@ const main = async (): Promise<void> => {
                 "\n",
                 "FORMAT:",
                 "1) detailed description of results, cleanly formatted as markdown.",
-                "2) <tldr>…</tldr> and nothing after it.",
+                "2) <tldr>…</tldr> tldr of above should be in here.",
                 "3) Final line: Zero or more <question>…?</question> lines (all questions must be here).",
                 "\n",
                 "Rules: Simple sentences. No questions outside <question>."
