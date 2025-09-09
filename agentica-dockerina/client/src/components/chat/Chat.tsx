@@ -2,7 +2,8 @@ import { useAgenticaRpc } from "../../provider/AgenticaRpcProvider";
 import { ChatInput } from "./ChatInput";
 import { ChatMessages } from "./ChatMessages";
 import { ChatStatus } from "./ChatStatus";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { TypingIndicator } from "./TypingIndicator";
 
 export function Chat() {
   const { messages, conversate, isConnected, isError, tryConnect } =
@@ -10,7 +11,39 @@ export function Chat() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const hasMessage = messages.length > 0;
   const lastMessage = messages[messages.length - 1];
-  const isLastMessageFromUser = lastMessage?.type === "userMessage";
+  const isWaitingForFirstAssistant = lastMessage?.type === "userMessage";
+
+  const hasAssistantThinking = useMemo(() => {
+    const isThinkingOnly = (input: string | null | undefined) => {
+      if (!input) return false;
+      let withoutThink = input.replace(/<think>[\s\S]*?<\/think>/gi, "");
+      withoutThink = withoutThink.replace(/^\s{0,3}#{1,6}\s+.*$/gm, "");
+      return withoutThink.trim().length === 0;
+    };
+
+    const lastChat = messages.at(-1)
+    if (lastChat == null) { return false }
+
+    if (lastChat.type === "assistantMessage" || lastChat.type === "describe") {
+        return isThinkingOnly((lastChat as any).text);
+    }
+    return false;
+  }, [messages]);
+
+  // ==============================================
+  // Debug: track waiting/assistant thinking states
+  useEffect(() => {
+    console.debug(
+      "[Chat] Msg send disable status:",
+      {
+        isConnected: isConnected, isError: isError,
+        isWaitingForFirstAssistant: isWaitingForFirstAssistant,
+        hasAssistantThinking: hasAssistantThinking
+      },
+      { messagesCount: messages.length, lastMessageType: lastMessage?.type }
+    );
+  }, [isConnected, isError, isWaitingForFirstAssistant, hasAssistantThinking]);
+  // ==============================================
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -47,12 +80,19 @@ export function Chat() {
               onRetryConnect={tryConnect}
               isWsUrlConfigured={import.meta.env.VITE_AGENTICA_WS_URL !== ""}
             />
+            {isConnected && !isError && isWaitingForFirstAssistant && (
+              <div className="flex justify-start mt-2">
+                <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-zinc-700/50 text-gray-100">
+                  <TypingIndicator />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="p-4">
             <ChatInput
               onSendMessage={handleSendMessage}
-              disabled={!isConnected || isError || isLastMessageFromUser}
+              disabled={!isConnected || isError || isWaitingForFirstAssistant || hasAssistantThinking}
             />
           </div>
         </div>

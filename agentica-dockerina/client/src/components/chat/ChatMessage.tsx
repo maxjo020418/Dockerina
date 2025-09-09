@@ -3,6 +3,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
 import { markdownComponents } from "./MarkdownComponents";
+import { TypingIndicator } from "./TypingIndicator";
 
 export function parseAndFormatSpecialTags(input: string | null | undefined): string {
   if (input == null) {
@@ -62,6 +63,22 @@ interface ChatMessageProps {
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === "user";
 
+  const isThinking = (input: string | null | undefined) => {
+    if (!input) return false;
+    // Remove <think> blocks
+    let withoutThink = input.replace(/<think>[\s\S]*?<\/think>/gi, "");
+    // Remove markdown heading lines (e.g., ## SELECT AGENT)
+    withoutThink = withoutThink.replace(/^\s{0,3}#{1,6}\s+.*$/gm, "");
+    // Remove whitespace
+    return withoutThink.trim().length === 0;
+  };
+
+  const extractFirstHeader = (input: string | null | undefined) => {
+    if (!input) return null;
+    const match = input.match(/^\s{0,3}(#{1,6})\s+(.+)$/m);
+    return match ? `${match[1]} ${match[2].trim()}` : null;
+  };
+
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
@@ -74,15 +91,21 @@ export function ChatMessage({ message }: ChatMessageProps) {
             {message.content}
           </p>
         ) : (
-          <div className="prose prose-sm prose-invert max-w-none [&_pre]:!p-0 [&_pre]:!m-0 [&_pre]:!bg-transparent">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight]}
-              components={markdownComponents}
-            >
-              {parseAndFormatSpecialTags(message.content)}
-            </ReactMarkdown>
-          </div>
+          (() => {
+            const thinking = isThinking(message.content);
+            return (
+              <div className="prose prose-sm prose-invert max-w-none [&_pre]:!p-0 [&_pre]:!m-0 [&_pre]:!bg-transparent">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeHighlight]}
+                  components={markdownComponents}
+                >
+                  {parseAndFormatSpecialTags(message.content)}
+                </ReactMarkdown>
+                {thinking && <TypingIndicator className="mt-1" />}
+              </div>
+            );
+          })()
         )}
       </div>
     </div>

@@ -150,7 +150,7 @@ const main = async (): Promise<void> => {
                 "FORMAT:",
                 "1) detailed description of results, cleanly formatted as markdown.",
                 "2) <tldr>…</tldr> tldr of above should be in here.",
-                "3) Final line: Zero or more <question>…?</question> lines (all questions must be here).",
+                "3) Final line: <question>…?</question> all question(s) must be here.",
                 "\n",
                 "Rules: Simple sentences. No questions outside <question>."
               ].join("\n"),
