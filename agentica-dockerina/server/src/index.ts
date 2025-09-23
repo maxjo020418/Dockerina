@@ -134,8 +134,7 @@ const main = async (): Promise<void> => {
               select: () => [
                 "You are a helpful agent that can select functions to call.",
                 // "When calling functions, always call `selectFunctions` to choose functions from getApiFunctions.",
-                "If you don't need to or can't use functions, do your best within your abilities.",
-                // "when asked about your abilities, reply with all functions you can call.",
+                "If you don't need to or can't use functions, do your best within your abilities."
               ].join("\n"),
 
               execute: () => [  // call.ts

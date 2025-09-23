@@ -234,7 +234,7 @@ main() {
     wait_for_service $CLIENT_PORT "Client"
     
     echo ""
-    print_success "✅ Both services are running!"
+    print_success "Both services are running!"
     echo ""
     echo "Service URLs:"
     echo "  Client: http://${CLIENT_HOST}:${CLIENT_PORT}"

@@ -155,6 +155,16 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 
 12. if functions are canceled(via `OllamaCancel`) the chat ends abruptly(only think block @ call process), perhaps fallback to `OllamaDescribe` and explain(structured feedback from OllamaCancel) or end convo gracefully.
 
+13. implement network exception handling (display error msg to user - Docker host unreachable, LLM host unreachable, etc.)
+
+14. (UI) fix loading pulse not disappearing + collapse `<think>`
+
+15. reinforce tag logics and sentinels (`<question> & <tldr>` tags)
+
+16. chaining function call results (eg: `if container is running do xxx`, currently knowledge of prev. for call(s) in the f-call loop doesn't seem to be passed on properly)
+
+17. clean index.ts and some other prompts, reduce context size
+
 ---
 
 <u>**Interaction notes for \#3: (Problematic ones - function being called multiple times *separately*)**</u>

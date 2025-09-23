@@ -98,7 +98,8 @@ export function ollamaExecute<Model extends ILlmSchema.Model>(executor: Partial<
       )(ctx, allExecutes);
     }
 
-    // // Empty stack if function(s) are not used
+    // Empty stack if function(s) are not used
+    // (might be needed if serializeCalls is false)
     for (const op of [...ctx.stack]) {  // copy of stack to avoid mutation during iteration
       console.log("[OllamaExecute.ts] removing \"", op.operation.name, "\" from stack.")
       cancelFunctionFromContext(ctx, {

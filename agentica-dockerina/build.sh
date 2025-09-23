@@ -107,7 +107,7 @@ build_project() {
     print_status "Installing server workspace dependencies..."
     pnpm install
     
-    # Build agentica core and rpc packages (these are workspace dependencies)
+    # Build agentica core and rpc packages (workspace dependencies)
     print_status "Building agentica core packages..."
     pnpm --filter @agentica/core build
     pnpm --filter @agentica/rpc build
@@ -124,7 +124,7 @@ build_project() {
     pnpm build
     cd ..
 
-    print_success "✅ All dependencies installed and built successfully"
+    print_success "All dependencies installed and built successfully!"
 }
 
 # Main execution
@@ -155,7 +155,7 @@ main() {
     build_project
     
     echo ""
-    print_success "✅ Build completed successfully!"
+    print_success "Build completed successfully!"
     echo ""
     echo "Next steps:"
     echo "  Run the application: ./run.sh"
