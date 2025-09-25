@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { TypingIndicator } from "./TypingIndicator";
 
 export function Chat() {
-  const { messages, conversate, isConnected, isError, tryConnect } =
+  const { messages, conversate, isConnected, isError, errorDetails, tryConnect } =
     useAgenticaRpc();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const hasMessage = messages.length > 0;
@@ -79,6 +79,7 @@ export function Chat() {
               hasMessages={hasMessage}
               onRetryConnect={tryConnect}
               isWsUrlConfigured={import.meta.env.VITE_AGENTICA_WS_URL !== ""}
+              errorDetails={errorDetails}
             />
             {isConnected && !isError && isWaitingForFirstAssistant && (
               <div className="flex justify-start mt-2">

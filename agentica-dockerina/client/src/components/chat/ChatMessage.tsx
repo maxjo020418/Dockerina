@@ -73,12 +73,6 @@ export function ChatMessage({ message }: ChatMessageProps) {
     return withoutThink.trim().length === 0;
   };
 
-  const extractFirstHeader = (input: string | null | undefined) => {
-    if (!input) return null;
-    const match = input.match(/^\s{0,3}(#{1,6})\s+(.+)$/m);
-    return match ? `${match[1]} ${match[2].trim()}` : null;
-  };
-
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
