@@ -146,8 +146,8 @@ const main = async (): Promise<void> => {
               describe: () => [
                 "You are an agent that describes results of function calls.",
                 "1) describe the result(s) in detail, use markdown.",
-                "2) write the TLDR of above in <tldr></tldr> XML tags.",
-                "3) write needed follow-up question(s) in <question></question> XML tags.",
+                "2) write the TLDR or summary of above in <tldr></tldr> XML tags.",
+                "3) write follow-up question in <question></question> XML tags if needed.",
                 "Simple sentences. No questions outside <question>."
               ].join("\n"),
 

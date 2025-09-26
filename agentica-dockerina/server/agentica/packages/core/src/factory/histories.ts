@@ -35,6 +35,18 @@ function reduceToTldrAndQuestions(text: string): string | null {
   return parts.length ? parts.join("\n") : null;
 }
 
+function stringifyToolValue(value: unknown): unknown {
+  if (value == null) {
+    return value;
+  }
+
+  if (typeof Buffer !== "undefined" && Buffer.isBuffer(value)) {
+    return value.toString("utf-8");
+  }
+
+  return value;
+}
+
 // internal (** removed JSDoc for external access **)
 export function decodeHistory<Model extends ILlmSchema.Model>(history: AgenticaHistory<Model>): OpenAI.ChatCompletionMessageParam[] {
   // NO NEED TO DECODE DESCRIBE
@@ -102,10 +114,10 @@ export function decodeHistory<Model extends ILlmSchema.Model>(history: AgenticaH
           ...(history.operation.protocol === "http"
             ? {
                 status: (history.value as IHttpResponse).status,
-                data: (history.value as IHttpResponse).body,
+                data: stringifyToolValue((history.value as IHttpResponse).body),
               }
             : {
-                value: history.value,
+                value: stringifyToolValue(history.value),
               }),
         }),
       },
