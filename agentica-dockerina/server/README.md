@@ -155,15 +155,60 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 
 12. if functions are canceled(via `OllamaCancel`) the chat ends abruptly(only think block @ call process), perhaps fallback to `OllamaDescribe` and explain(structured feedback from OllamaCancel) or end convo gracefully.
 
-13. implement network exception handling (display error msg to user - Docker host unreachable, LLM host unreachable, etc.)
+13. ~~implement network exception handling (display error msg to user - Docker host unreachable, LLM host unreachable, etc.)~~
 
 14. (UI) fix loading pulse not disappearing + collapse `<think>`
 
-15. reinforce tag logics and sentinels (`<question> & <tldr>` tags)
+15. ~~reinforce tag logics and sentinels (`<question> & <tldr>` tags)~~
 
 16. chaining function call results (eg: `if container is running do xxx`, currently knowledge of prev. for call(s) in the f-call loop doesn't seem to be passed on properly)
 
-17. clean index.ts and some other prompts, reduce context size
+17. ~~clean index.ts and some other prompts, reduce context size~~
+
+18. check for new engine compatibility/stability for Ollama v0.12 (Qwen3 native support)
+
+20. `stderr` and `stdout` output refinement might be needed:
+    (ACTUAL CALL SHOULD BE DIFFERENT, CHECK WIRESHARK CAPTURE)
+    ```json
+    {
+      type: "execute",
+      id: "64f61393-ffae-4eb5-8d7a-38f7d777d5f4",
+      created_at: "2025-09-25T07:18:44.530Z",
+      protocol: "class",
+      operation: {
+        protocol: "class",
+        controller: [Object],
+        function: [Object],
+        name: "getContainerLogs",
+        toJSON: [Function: toJSON]
+      },
+      arguments: {
+        id: "d6a17847f760c33be01d6058a27a06446363b4737b6b91a995f3e555111ad3d9"
+      },
+      value: <Buffer 01 00 00 00 00 00 00 88 20 20 20 20 31 20 20 20 20 20 30 20 72 6f 6f 74 20 20 20 20 20 52 20 20 20 20 20 31 36 34 30 20 20 20 30 25 20 20 20 36 20 20 ... 2024 more bytes>,
+      toJSON: [Function: toJSON],
+      toHistory: [Function: toHistory]
+    },
+    {
+      type: "execute",
+      id: "de0bf03f-4158-4061-987d-b68a5c9f97d9",
+      created_at: "2025-09-25T07:18:44.533Z",
+      protocol: "class",
+      operation: {
+        protocol: "class",
+        controller: [Object],
+        function: [Object],
+        name: "getContainerErrorLogs",
+        toJSON: [Function: toJSON]
+      },
+      arguments: {
+        id: "d6a17847f760c33be01d6058a27a06446363b4737b6b91a995f3e555111ad3d9"
+      },
+      value: <Buffer >,
+      toJSON: [Function: toJSON],
+      toHistory: [Function: toHistory]
+    }
+    ```
 
 ---
 

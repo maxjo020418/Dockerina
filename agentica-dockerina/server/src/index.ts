@@ -133,29 +133,26 @@ const main = async (): Promise<void> => {
 
               select: () => [
                 "You are a helpful agent that can select functions to call.",
-                // "When calling functions, always call `selectFunctions` to choose functions from getApiFunctions.",
                 "If you don't need to or can't use functions, do your best within your abilities."
+                // extra instuctions in OllamaSelect.ts (inserted into userprompts)
               ].join("\n"),
 
               execute: () => [  // call.ts
-                "You call the functions provided.",
+                "You are an agent that call the functions provided.",
                 "Prefer calling a tool over answering in prose.",
                 "If context lacks info to fill arguments, ask a concise follow-up question.",
               ].join("\n"),
 
               describe: () => [
-                "You describe results of function calls using the call history above.",
-                "\n",
-                "FORMAT:",
-                "1) detailed description of results, cleanly formatted as markdown.",
-                "2) <tldr>…</tldr> tldr of above should be in here.",
-                "3) Final line: <question>…?</question> all question(s) must be here.",
-                "\n",
-                "Rules: Simple sentences. No questions outside <question>."
+                "You are an agent that describes results of function calls.",
+                "1) describe the result(s) in detail, use markdown.",
+                "2) write the TLDR or summary of above in <tldr></tldr> XML tags.",
+                "3) write follow-up question in <question></question> XML tags if needed.",
+                "Simple sentences. No questions outside <question>."
               ].join("\n"),
 
               cancel: () => [
-                "You cancel functions which are prepared to call. (if needed)",
+                "You are an agent that cancels functions which are prepared to call. (if needed)",
                 "Use the supplied tools to select some functions to cancel of `getApiFunctions()` returned.",
                 "If you can't find any proper function to select, don't do anything.",
               ].join("\n"),
@@ -181,7 +178,7 @@ const main = async (): Promise<void> => {
             */
 
             // Serialized calls: present one tool per turn
-            serializeCalls: true,
+            serializeCalls: false,
           },
 
           // le' functions I add

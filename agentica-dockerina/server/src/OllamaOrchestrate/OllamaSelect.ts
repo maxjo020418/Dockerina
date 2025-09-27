@@ -183,8 +183,10 @@ async function step<Model extends ILlmSchema.Model>(
               ...(typeof decoded === "string" ? {} : decoded),
               type: "text",
               text: text 
-                + "\n(When calling a function, you must use it via the `selectFunctions` and follow this format: "
-                + "{\"name\": \"selectFunctions\", \"arguments\": {\"functions\": [{\"name\": <function name>, \"reason\": <reason>}, ...]}})"
+                + "\n(Use the functions provided from `getApiFunctions` via `selectFunctions` to select functions to call for the user."
+                + "DO NOT call functions directly without using `selectFunctions`)"
+                // + "\n(When calling a function, you must use it via the `selectFunctions` and follow this format: "
+                // + "{\"name\": \"selectFunctions\", \"arguments\": {\"functions\": [{\"name\": <function name>, \"reason\": <reason>}, ...]}})"
             } satisfies OpenAI.ChatCompletionContentPartText;
           }
           return decoded

@@ -15,6 +15,7 @@ interface AgenticaRpcContextType {
   conversate: (message: string) => Promise<void>;
   isConnected: boolean;
   isError: boolean;
+  errorDetails: string | null;
   tryConnect: () => Promise<
     | WebSocketConnector<
         null,
@@ -27,9 +28,21 @@ interface AgenticaRpcContextType {
 
 const AgenticaRpcContext = createContext<AgenticaRpcContextType | null>(null);
 
+const formatError = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.stack ?? error.message;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch (_) {
+    return String(error);
+  }
+};
+
 export function AgenticaRpcProvider({ children }: PropsWithChildren) {
   const [messages, setMessages] = useState<IAgenticaEventJson[]>([]);
   const [isError, setIsError] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [driver, setDriver] =
     useState<Driver<IAgenticaRpcService<"chatgpt">, false>>();
 
@@ -42,6 +55,7 @@ export function AgenticaRpcProvider({ children }: PropsWithChildren) {
   const tryConnect = useCallback(async () => {
     try {
       setIsError(false);
+      setErrorDetails(null);
       const connector: WebSocketConnector<
         null,
         IAgenticaRpcListener,
@@ -62,6 +76,7 @@ export function AgenticaRpcProvider({ children }: PropsWithChildren) {
     } catch (e) {
       console.error(e);
       setIsError(true);
+      setErrorDetails(formatError(e));
     }
   }, [pushMessage]);
 
@@ -76,6 +91,7 @@ export function AgenticaRpcProvider({ children }: PropsWithChildren) {
       } catch (e) {
         console.error(e);
         setIsError(true);
+        setErrorDetails(formatError(e));
       }
     },
     [driver]
@@ -95,7 +111,7 @@ export function AgenticaRpcProvider({ children }: PropsWithChildren) {
 
   return (
     <AgenticaRpcContext.Provider
-      value={{ messages, conversate, isConnected, isError, tryConnect }}
+      value={{ messages, conversate, isConnected, isError, errorDetails, tryConnect }}
     >
       {children}
     </AgenticaRpcContext.Provider>
