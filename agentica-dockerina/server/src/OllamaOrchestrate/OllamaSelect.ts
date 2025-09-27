@@ -318,7 +318,7 @@ async function step<Model extends ILlmSchema.Model>(
         stream: toAsyncGenerator(choice.message.content),
         join: async () => Promise.resolve(choice.message.content!),
         done: () => true,
-        get: () => "## *SELECT AGENT*\n\n" + choice.message.content!, // string
+        get: () => choice.message.content!, // "## *SELECT AGENT*\n\n" + 
       });
       ctx.dispatch(event);
     }
@@ -331,7 +331,7 @@ async function step<Model extends ILlmSchema.Model>(
           stream: toAsyncGenerator(thinks),
           join: async () => Promise.resolve(thinks),
           done: () => true,
-          get: () => "## *SELECT AGENT*\n\n" + thinks,
+          get: () => thinks, // "## *SELECT AGENT*\n\n" + 
         });
         ctx.dispatch(event);
       }

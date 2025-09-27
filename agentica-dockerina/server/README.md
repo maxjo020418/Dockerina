@@ -149,65 +149,63 @@ Change prompting/structures to reflect an Agentic behavior rather than forcing. 
 
 9. **\[RESOLVED\] - (edited `OllamaExecute`)** Function call loop calls `OllamaDescribe.ts` EVERY TIME in the f-call loop.
 
-10. (UI change) User can still send message WHILE the model is generating... (block send button like when `Failed to connect to Agentica server`)
+10. **\[?RESOLVED?\] -** (UI change) User can still send message WHILE the model is generating... (block send button like when `Failed to connect to Agentica server`)
 
 11. **\[RESOLVED\] - added sentinel to monitor tools calls and fix broken tool calls (@toolCallFallback and more)** plus, one tool call at a time is enforced, not multiple tool calls at once to avoid context filling and confusion
 
 12. if functions are canceled(via `OllamaCancel`) the chat ends abruptly(only think block @ call process), perhaps fallback to `OllamaDescribe` and explain(structured feedback from OllamaCancel) or end convo gracefully.
 
-13. ~~implement network exception handling (display error msg to user - Docker host unreachable, LLM host unreachable, etc.)~~
+13. **\[RESOLVED\] -** implement network exception handling (display error msg to user - Docker host unreachable, LLM host unreachable, etc.)
 
 14. (UI) fix loading pulse not disappearing + collapse `<think>`
 
-15. ~~reinforce tag logics and sentinels (`<question> & <tldr>` tags)~~
+15. **\[RESOLVED\] -** reinforce tag logics and ~~sentinels~~ (`<question> & <tldr>` tags)
 
-16. chaining function call results (eg: `if container is running do xxx`, currently knowledge of prev. for call(s) in the f-call loop doesn't seem to be passed on properly)
+16. **\[RESOLVED\] -** ~~chaining function call results (eg: `if container is running do xxx`, currently knowledge of prev. for call(s) in the f-call loop doesn't seem to be passed on properly)~~ **decode specific problem for `checkContainerLogs`**
 
 17. ~~clean index.ts and some other prompts, reduce context size~~
 
-18. check for new engine compatibility/stability for Ollama v0.12 (Qwen3 native support)
+18. **\[RESOLVED\] -** check for new engine compatibility/stability for Ollama v0.12 (Qwen3 native support) $\rightarrow$ seems stable with no changes
 
 20. `stderr` and `stdout` output refinement might be needed:
-    (ACTUAL CALL SHOULD BE DIFFERENT, CHECK WIRESHARK CAPTURE)
     ```json
     {
-      type: "execute",
-      id: "64f61393-ffae-4eb5-8d7a-38f7d777d5f4",
-      created_at: "2025-09-25T07:18:44.530Z",
-      protocol: "class",
-      operation: {
-        protocol: "class",
-        controller: [Object],
-        function: [Object],
-        name: "getContainerLogs",
-        toJSON: [Function: toJSON]
-      },
-      arguments: {
-        id: "d6a17847f760c33be01d6058a27a06446363b4737b6b91a995f3e555111ad3d9"
-      },
-      value: <Buffer 01 00 00 00 00 00 00 88 20 20 20 20 31 20 20 20 20 20 30 20 72 6f 6f 74 20 20 20 20 20 52 20 20 20 20 20 31 36 34 30 20 20 20 30 25 20 20 20 36 20 20 ... 2024 more bytes>,
-      toJSON: [Function: toJSON],
-      toHistory: [Function: toHistory]
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "type": "function",
+          "id": "40b79147-cbf5-494b-bdb3-7ff4e068801f",
+          "function": {
+            "name": "getContainerLogs",
+            "arguments": "{\"id\":\"d6a17847f760c33be01d6058a27a06446363b4737b6b91a995f3e555111ad3d9\"}"
+          }
+        }
+      ]
     },
     {
-      type: "execute",
-      id: "de0bf03f-4158-4061-987d-b68a5c9f97d9",
-      created_at: "2025-09-25T07:18:44.533Z",
-      protocol: "class",
-      operation: {
-        protocol: "class",
-        controller: [Object],
-        function: [Object],
-        name: "getContainerErrorLogs",
-        toJSON: [Function: toJSON]
-      },
-      arguments: {
-        id: "d6a17847f760c33be01d6058a27a06446363b4737b6b91a995f3e555111ad3d9"
-      },
-      value: <Buffer >,
-      toJSON: [Function: toJSON],
-      toHistory: [Function: toHistory]
-    }
+      "role": "tool",
+      "tool_call_id": "40b79147-cbf5-494b-bdb3-7ff4e068801f",
+      "content": "{\"function\":{\"protocol\":\"class\",\"description\":\"Gets most recent stdout logs of a Docker container by its ID\",\"parameters\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\"}},\"required\":[\"id\"],\"additionalProperties\":false,\"$defs\":{}}},\"value\":\"\\u0001\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\ufffd    1     0 root     R     1640   0%   6   0% top\\r\\u001b[H\\u001b[JMem: 14071728K used, 9320640K free, 323748K shrd, 463388K buff, 5855328K cached\\n\\u0001\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000ECPU:   3% usr   1% sys   0% nic  94% idle   0% io   0% irq   0% sirq\\n\\u0001\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000&Load average: 0.85 0.82 0.79 1/1778 6\\n\\u0001\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000=\\u001b[7m  PID  PPID USER     STAT   VSZ %VSZ CPU %CPU COMMAND\\u001b[m\\n\\u0001\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\ufffd    1     0 root     R     1640   0%   6   0% top\\r\\u001b[H\\u001b[JMem: 14064424K used, 9327944K free, 323824K shrd, 463396K buff, 5855408K cached\\n\\u0001\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000ECPU:   3% usr   1% sys   0% nic  93% idle   0% io   0% irq   0% 
+      ..."
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "type": "function",
+          "id": "f711b620-6fc7-4c13-b185-cda625bc2827",
+          "function": {
+            "name": "getContainerErrorLogs",
+            "arguments": "{\"id\":\"d6a17847f760c33be01d6058a27a06446363b4737b6b91a995f3e555111ad3d9\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "f711b620-6fc7-4c13-b185-cda625bc2827",
+      "content": "{\"function\":{\"protocol\":\"class\",\"description\":\"Gets most recent stderr logs of a Docker container by its ID\",\"parameters\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\"}},\"required\":[\"id\"],\"additionalProperties\":false,\"$defs\":{}}},\"value\":\"\"}"
+    },
     ```
 
 ---

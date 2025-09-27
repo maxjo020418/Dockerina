@@ -6,6 +6,13 @@ interface ChatMessagesProps {
 }
 
 export function ChatMessages({ messages }: ChatMessagesProps) {
+  const lastAssistantIndex = messages.reduce((latestIndex, message, index) => {
+    if (message.type === "assistantMessage" || message.type === "describe") {
+      return index;
+    }
+    return latestIndex;
+  }, -1);
+
   return (
     <>
       {messages.map((message, externalIndex) => (
@@ -31,6 +38,7 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
                   role: "assistant",
                   content: message.text
                 }}
+                isLatestAssistant={externalIndex === lastAssistantIndex}
               />;
           }
 
@@ -42,6 +50,7 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
                   role: "assistant",
                   content: message.text
                 }}
+                isLatestAssistant={externalIndex === lastAssistantIndex}
               />;
           }
           return;
