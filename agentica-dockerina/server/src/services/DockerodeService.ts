@@ -1,5 +1,7 @@
 import Docker from "dockerode";
 import { finished } from "stream";
+import { ProgressStore } from "./jobs/ProgressStore";
+import type { JobRef, PullProgressDetail, ProgressEvent } from "./jobs/ProgressTypes";
 
 import { SGlobal } from "../SGlobal";
 import type { 
@@ -40,6 +42,104 @@ export class DockerodeService {
         
         console.log("[DockerodeService.ts] Initializing Dockerode with options:", docker_options);
         this.docker = new Docker(docker_options);
+    }
+
+    /**
+     * Pull a Docker image by reference (e.g., "nginx:latest") and stream progress as a background job.
+     * Returns a JobRef; the orchestrator will stream progress updates to the LLM every ~5s
+     * and provide the final result upon completion.
+     */
+    public async pullImage(params: { ref: string, auth?: Docker.AuthConfig }): Promise<JobRef> {
+        const { ref, auth } = params;
+        const job = ProgressStore.createJob("docker.pull", { ref });
+        console.log(`[DockerodeService.ts] Starting image pull job ${job.id} for ${ref}`);
+
+        // fire-and-forget async task
+        (async () => {
+            try {
+                ProgressStore.setRunning(job.id);
+                const stream = await this.docker.pull(ref, auth ? { authconfig: auth } : undefined as any);
+
+                const layers: Record<string, { status?: string; current?: number; total?: number; percent?: number; }> = {};
+                let overallPhase: PullProgressDetail["phase"] = "resolving";
+                let lastEmitTs = 0;
+                let digest: string | undefined;
+                let resultStatus: string = "downloaded";
+
+                const emitProgress = (message?: string) => {
+                    const now = Date.now();
+                    // emit frequently; reporter throttles to 5s for LLM messages
+                    const overallPercent = computeOverallPercent(layers);
+                    const ev: ProgressEvent = {
+                        ts: now,
+                        message,
+                        detail: {
+                            phase: overallPhase,
+                            percent: overallPercent ?? undefined,
+                            layers,
+                            ref,
+                        } as PullProgressDetail,
+                    };
+                    ProgressStore.update(job.id, ev);
+                    lastEmitTs = now;
+                };
+
+                await new Promise<void>((resolve, reject) => {
+                    // followProgress calls onFinished when all pull operations complete
+                    (this.docker as any).modem.followProgress(
+                        stream,
+                        (err: any, _output: any[]) => {
+                            if (err) return reject(err);
+                            resolve();
+                        },
+                        (event: any) => {
+                            // event shape: { status, id?, progressDetail?, aux? }
+                            const status: string = event?.status ?? "";
+                            const id: string | undefined = event?.id ?? undefined;
+                            const pd: { current?: number; total?: number } | undefined = event?.progressDetail;
+                            const aux = event?.aux;
+
+                            if (aux && typeof aux.Digest === "string") {
+                                digest = aux.Digest;
+                            }
+                            if (status.includes("Already exists")) {
+                                resultStatus = "already-exists";
+                            }
+
+                            if (status) {
+                                if (/Downloading/i.test(status)) overallPhase = "downloading";
+                                else if (/Extracting/i.test(status)) overallPhase = "extracting";
+                                else if (/Verifying/i.test(status)) overallPhase = "verifying";
+                                else if (/Pull complete|Download complete/i.test(status)) overallPhase = "done";
+                                else if (/Waiting/i.test(status)) overallPhase = "waiting";
+                            }
+                            if (id) {
+                                const layer = layers[id] ?? {};
+                                layer.status = status || layer.status;
+                                if (pd && typeof pd.total === "number" && pd.total > 0) {
+                                    layer.current = pd.current ?? layer.current ?? 0;
+                                    layer.total = pd.total;
+                                    layer.percent = Math.max(0, Math.min(100, Math.floor(((layer.current ?? 0) / pd.total) * 100)));
+                                }
+                                layers[id] = layer;
+                            }
+
+                            emitProgress(status || undefined);
+                        }
+                    );
+                });
+
+                const final = { ref, digest, status: resultStatus };
+                ProgressStore.finish(job.id, final);
+                console.log(`[DockerodeService.ts] Image pull job ${job.id} for ${ref} finished (${resultStatus})`);
+            } catch (err) {
+                const err_msg = err instanceof Error ? err.message : String(err);
+                console.error(`[DockerodeService.ts] Image pull job ${job.id} failed:`, err_msg);
+                ProgressStore.fail(job.id, err);
+            }
+        })();
+
+        return ProgressStore.toRef(job);
     }
 
     // so that instance is only initialized once!
@@ -438,7 +538,6 @@ export class DockerodeService {
         }
     }
 
-
     /**
      * Executes a command in a running Docker container.
      * @param containerId - ID of the container
@@ -472,7 +571,6 @@ export class DockerodeService {
             
             const outChunks: Buffer[] = [];
             const errChunks: Buffer[] = [];
-
 
             container.modem.demuxStream(  // helper from dockerode’s underlying transport
                 stream,
@@ -528,4 +626,27 @@ export class DockerodeService {
             throw new Error(`Failed to execute command in Docker container: ${err_msg}`);
         }
     }
+
+    
+}
+
+function computeOverallPercent(layers: Record<string, { status?: string; current?: number; total?: number; percent?: number; }>): number | null {
+    const values = Object.values(layers);
+    let sumCurrent = 0;
+    let sumTotal = 0;
+    for (const l of values) {
+        if (typeof l.total === "number" && l.total > 0) {
+            sumCurrent += Math.min(l.current ?? 0, l.total);
+            sumTotal += l.total;
+        }
+    }
+    if (sumTotal > 0) {
+        return Math.max(0, Math.min(100, Math.floor((sumCurrent / sumTotal) * 100)));
+    }
+    // fallback: based on count of layers with status "Pull complete" or percent 100
+    if (values.length > 0) {
+        const done = values.filter(l => (l.percent ?? 0) >= 100 || /complete/i.test(l.status ?? "")).length;
+        return Math.floor((done / values.length) * 100);
+    }
+    return null;
 }

@@ -34,6 +34,7 @@ important safety rules to follow while orchestrating Docker workloads.
 | `stopAllDockerinaContainers()` | Stop every container whose name starts with `Dockerina-`. | _none_ | `void`. |
 | `removeAllDockerinaContainers()` | Stop (if needed) and delete every `Dockerina-…` container. | _none_ | `void`. |
 | `execContainer({ containerId, command })` | Run a non-interactive command in a running container. | `containerId`, `command[]`. | `{ ExitCode, StdOut, StdErr }`. |
+| `pullImage({ ref })` | Pull an image by tag/digest with progress streaming. | `ref` – e.g. `"nginx:latest"`. | Final result after streaming; progress messages every ~5s. |
 
 ## Method details
 ### `listContainers()`
@@ -96,6 +97,12 @@ important safety rules to follow while orchestrating Docker workloads.
   service returns `408` to signal a timeout.
 - Use for quick diagnostic commands (`['ls','-l','/app']`) rather than long
   interactive sessions.
+
+### `pullImage({ ref })`
+- Starts a background job to pull the image and immediately returns a job reference.
+- The orchestrator detects this job and streams progress updates to the LLM every ~5 seconds.
+- Progress includes overall percent, phase, and per-layer completion counts.
+- The function result delivered to the LLM after streaming ends contains a summary like `{ ref, digest?, status }` where `status` is one of `"downloaded" | "already-exists"`.
 
 ## Usage playbooks
 - **Inspect failing container**

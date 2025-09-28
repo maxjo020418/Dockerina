@@ -53,6 +53,8 @@ import {
 
 import { v4 as uuidv4 } from "uuid";
 import { extractThinkBlocks, parseRawJsonAfterThink, parseToolCallFromContent } from "../utils/toolCallFallback";
+import { streamProgress } from "./OllamaProgressReporter";
+import type { JobRef } from "../services/jobs/ProgressTypes";
 
 export async function ollamaCall<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model>, // | MicroAgenticaContext<Model>,
@@ -434,11 +436,33 @@ async function propagateClass<Model extends ILlmSchema.Model>(props: {
   // EXECUTE FUNCTION
   try {
     const value = await executeClassOperation(props.operation, props.call.arguments);
-    return createExecuteEvent({
-      operation: props.call.operation,
-      arguments: props.call.arguments,
-      value,
-    });
+    // If the function returns a JobRef, stream progress and await final value
+    if (isJobRef(value)) {
+      const prefix = `Job ${value.kind} :: ${props.call.operation.name}`;
+      try {
+        const final = await streamProgress(props.ctx, value as JobRef, { intervalMs: 5000, prefix });
+        return createExecuteEvent({
+          operation: props.call.operation,
+          arguments: props.call.arguments,
+          value: final,
+        });
+      } catch (error) {
+        return createExecuteEvent({
+          operation: props.call.operation,
+          arguments: props.call.arguments,
+          value:
+            error instanceof Error
+              ? { name: error.name, message: error.message }
+              : { message: String(error) },
+        });
+      }
+    } else {
+      return createExecuteEvent({
+        operation: props.call.operation,
+        arguments: props.call.arguments,
+        value,
+      });
+    }
   }
   catch (error) {
     console.log("[OllamaCall.ts] propagateClass error");
@@ -455,6 +479,11 @@ async function propagateClass<Model extends ILlmSchema.Model>(props: {
           : error,
     });
   }
+}
+
+function isJobRef(v: unknown): v is JobRef {
+  return !!v && typeof v === "object" && ("id" in (v as any)) && ("kind" in (v as any))
+    && typeof (v as any).id === "string" && typeof (v as any).kind === "string";
 }
 
 async function propagateMcp<Model extends ILlmSchema.Model>(props: {
