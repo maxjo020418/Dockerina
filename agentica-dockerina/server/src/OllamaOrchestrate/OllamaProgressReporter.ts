@@ -8,7 +8,7 @@ import {
 
 import { ProgressStore } from "../services/jobs/ProgressStore";
 import { JOB_EVENTS } from "../services/jobs/ProgressTypes";
-import type { JobRecord, JobRef, ProgressEvent, PullProgressDetail } from "../services/jobs/ProgressTypes";
+import type { JobRecord, JobRef, ProgressEvent, PullProgressDetail, ExecProgressDetail } from "../services/jobs/ProgressTypes";
 
 export async function streamProgress<Model extends ILlmSchema.Model>(
   ctx: AgenticaContext<Model>,
@@ -69,15 +69,30 @@ export async function streamProgress<Model extends ILlmSchema.Model>(
 
 function formatProgress(prefix: string, job: JobRecord, ev: ProgressEvent): string {
   const base = `${prefix}: ${new Date(ev.ts).toLocaleTimeString()}`;
-  const detail = ev.detail as PullProgressDetail | undefined;
+  const detail = ev.detail as (PullProgressDetail | ExecProgressDetail | undefined);
   if (!detail) return `${base} — ${ev.message ?? job.status}`;
-  if ((detail as any).ref) {
-    const pct = detail.percent != null ? ` ${detail.percent}%` : "";
-    const phase = detail.phase ?? "running";
-    const layerCount = detail.layers ? Object.keys(detail.layers).length : 0;
-    const complete = detail.layers ? Object.values(detail.layers).filter(l => (l.percent ?? 0) >= 100 || /complete/i.test(l.status ?? "")).length : 0;
-    return `${base} — pulling '${detail.ref}':${pct} (${complete}/${layerCount} layers) — ${phase}`;
+  if (isPullDetail(detail)) {
+    const pd = detail as PullProgressDetail;
+    const pct = pd.percent != null ? ` ${pd.percent}%` : "";
+    const phase = pd.phase ?? "running";
+    const layerCount = pd.layers ? Object.keys(pd.layers).length : 0;
+    const complete = pd.layers ? Object.values(pd.layers).filter((l: any) => ((l?.percent ?? 0) >= 100) || /complete/i.test(String(l?.status ?? ""))).length : 0;
+    return `${base} — pulling '${pd.ref}':${pct} (${complete}/${layerCount} layers) — ${phase}`;
+  }
+  if (typeof (detail as ExecProgressDetail).bytesOut !== "undefined") {
+    const d = detail as ExecProgressDetail;
+    const so = d.stdoutTail ? `\nstdout: ${trimSnippet(d.stdoutTail)}` : "";
+    const se = d.stderrTail ? `\nstderr: ${trimSnippet(d.stderrTail)}` : "";
+    return `${base} — exec output (${d.bytesOut ?? 0}B out, ${d.bytesErr ?? 0}B err)${so}${se}`;
   }
   return `${base} — ${ev.message ?? job.status}`;
 }
 
+function trimSnippet(s: string, max = 200): string {
+  if (s.length <= max) return s;
+  return "…" + s.slice(s.length - max);
+}
+
+function isPullDetail(d: PullProgressDetail | ExecProgressDetail | undefined): d is PullProgressDetail {
+  return !!d && typeof (d as any).ref === "string";
+}

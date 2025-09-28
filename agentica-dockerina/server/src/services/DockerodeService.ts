@@ -9,7 +9,6 @@ import type {
     IContainerImageSimple, 
     ISimpleContainerInspectInfo,
     // ISimpleContainerLog,
-    IContainerOutStream,
 } from "../structures/IDockerode";
 
 /*
@@ -441,92 +440,109 @@ export class DockerodeService {
     }
 
     /**
-     * Executes a command in a running Docker container.
-     * @param containerId - ID of the container
-     * @param command - Command to execute as an array of strings
-     * @returns output containing exit code, stdout, and stderr
+     * Executes a command in a running Docker container with streaming progress.
+     * Emits progress events containing stdout/stderr tails every time output arrives.
+     * The returned JobRef is auto-streamed to the LLM by the orchestrator.
      */
     public async execContainer(params: {
-        containerId: string,
-        command: string[],
-    }): Promise<IContainerOutStream> {
-        const { containerId, command } = params;
+        containerId: string;
+        command: string[];
+        tailBytes?: number;
+    }): Promise<JobRef> {
+        const { containerId, command, tailBytes = 4096 } = params;
+        const job = ProgressStore.createJob("docker.exec", { containerId, command });
+        console.log(`[DockerodeService.ts] Starting exec job ${job.id} on ${containerId}: ${JSON.stringify(command)}`);
 
-        try {
-            const container = this.getContainer(containerId);
-            const exec = await container.exec({
-                Cmd: command,
-                AttachStdout: true,
-                AttachStderr: true,
-                /*
-                stream is a Node Duplex stream carrying the exec I/O. 
-                In Tty:false it is the multiplexed binary format described above. 
-                In Tty:true it is a single raw byte stream.
-                */
-                Tty: false,
-            });
-            
-            const stream = await exec.start({
-                hijack: true,
-                stdin: false,
-            });
-            
-            const outChunks: Buffer[] = [];
-            const errChunks: Buffer[] = [];
-
-            container.modem.demuxStream(  // helper from dockerode’s underlying transport
-                stream,
-                { write: (c: Buffer) => outChunks.push(c) } as any,
-                { write: (c: Buffer) => errChunks.push(c) } as any,
-            )
-
-            const timer = setTimeout(() => {
-                stream.destroy(new Error("Exec command timed out, exec process may still be running."));
-            }, SGlobal.env.DOCKER_EXEC_TIMEOUT_MS);
-
-            const endPromise = finished(
-                stream,
-                ((err?: NodeJS.ErrnoException | null) => {
-                    if (err) {
-                        const err_msg = err instanceof Error ? err.message : String(err);
-                        console.error("[DockerodeService.ts] Error finishing stream:", err);
-                        throw new Error(`Exec command failed: ${err_msg}`);
-                    }
-                    console.log("[DockerodeService.ts] Stream finished successfully.");
-                })
-            );
-
+        (async () => {
             try {
-                endPromise;  // wait for `end`
-            } 
-            catch (err) {
+                ProgressStore.setRunning(job.id);
+                // initial event
+                ProgressStore.update(job.id, {
+                    ts: Date.now(),
+                    message: "starting",
+                    detail: { bytesOut: 0, bytesErr: 0, stdoutTail: "", stderrTail: "" }
+                });
+                const container = this.getContainer(containerId);
+                const exec = await container.exec({
+                    Cmd: command,
+                    AttachStdout: true,
+                    AttachStderr: true,
+                    Tty: false,
+                });
+
+                const stream = await exec.start({ hijack: true, stdin: false });
+
+                let bytesOut = 0;
+                let bytesErr = 0;
+                let stdoutTail = "";
+                let stderrTail = "";
+
+                const appendTail = (current: string, chunk: Buffer): string => {
+                    const appended = current + chunk.toString("utf-8");
+                    if (appended.length <= tailBytes) return appended;
+                    return appended.slice(appended.length - tailBytes);
+                };
+
+                // demux multiplexed stream into callbacks that update tails
+                (container as any).modem.demuxStream(
+                    stream,
+                    { write: (c: Buffer) => {
+                        bytesOut += c.length;
+                        stdoutTail = appendTail(stdoutTail, c);
+                        ProgressStore.update(job.id, {
+                            ts: Date.now(),
+                            message: "stdout",
+                            detail: { bytesOut, bytesErr, stdoutTail, stderrTail }
+                        });
+                    } } as any,
+                    { write: (c: Buffer) => {
+                        bytesErr += c.length;
+                        stderrTail = appendTail(stderrTail, c);
+                        ProgressStore.update(job.id, {
+                            ts: Date.now(),
+                            message: "stderr",
+                            detail: { bytesOut, bytesErr, stdoutTail, stderrTail }
+                        });
+                    } } as any,
+                );
+
+                const timer = setTimeout(() => {
+                    stream.destroy(new Error("Exec command timed out"));
+                }, SGlobal.env.DOCKER_EXEC_TIMEOUT_MS);
+
+                try {
+                    await new Promise<void>((resolve, reject) => finished(stream, (err) => err ? reject(err) : resolve()));
+                } finally {
+                    clearTimeout(timer);
+                }
+
+                // Poll for exit code; guard for short race
+                let exitCode: number | null = null;
+                for (let i = 0; i < 10; i++) {
+                    const info = await exec.inspect();
+                    if (info.ExitCode !== null) { exitCode = info.ExitCode; break; }
+                    await new Promise(r => setTimeout(r, 50));
+                }
+
+                const final = {
+                    containerId,
+                    command,
+                    exitCode: exitCode ?? 408,
+                    bytesOut,
+                    bytesErr,
+                    stdoutTail,
+                    stderrTail,
+                };
+                ProgressStore.finish(job.id, final);
+                console.log(`[DockerodeService.ts] Exec job ${job.id} finished with exitCode ${final.exitCode}`);
+            } catch (err) {
                 const err_msg = err instanceof Error ? err.message : String(err);
-                console.error("[DockerodeService.ts] Error finishing stream:", err);
-                throw new Error(`Exec command failed: ${err_msg}`);
-            } 
-            finally {
-                clearTimeout(timer);
+                console.error("[DockerodeService.ts] Exec job failed:", err_msg);
+                ProgressStore.fail(job.id, err);
             }
+        })();
 
-            // fetch exit code: slight races are possible, so loop briefly if needed
-            let exitCode: number | null = null;
-            for (let i = 0; i < 10; i++) {
-                const info = await exec.inspect();
-                if (info.ExitCode !== null) { exitCode = info.ExitCode; break; }
-                await new Promise(r => setTimeout(r, 50));  // 50ms wait for each loop (non-blocking)
-            }
-
-            return {
-                ExitCode: exitCode ?? 408,  // if none, regard as failure at above loop. timeout 408
-                StdOut: Buffer.concat(outChunks).toString("utf-8"),
-                StdErr: Buffer.concat(errChunks).toString("utf-8"),
-            }
-
-        } catch (err) {
-            const err_msg = err instanceof Error ? err.message : String(err);
-            console.error("[DockerodeService.ts] Error executing command in Docker container:", err);
-            throw new Error(`Failed to execute command in Docker container: ${err_msg}`);
-        }
+        return ProgressStore.toRef(job);
     }
 
     /**
