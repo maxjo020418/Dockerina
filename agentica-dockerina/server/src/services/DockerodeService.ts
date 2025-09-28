@@ -1,5 +1,7 @@
 import Docker from "dockerode";
 import { finished } from "stream";
+import { ProgressStore } from "./jobs/ProgressStore";
+import type { JobRef, PullProgressDetail, ProgressEvent } from "./jobs/ProgressTypes";
 
 import { SGlobal } from "../SGlobal";
 import type { 
@@ -7,7 +9,6 @@ import type {
     IContainerImageSimple, 
     ISimpleContainerInspectInfo,
     // ISimpleContainerLog,
-    IContainerOutStream,
 } from "../structures/IDockerode";
 
 /*
@@ -438,94 +439,229 @@ export class DockerodeService {
         }
     }
 
-
     /**
-     * Executes a command in a running Docker container.
-     * @param containerId - ID of the container
-     * @param command - Command to execute as an array of strings
-     * @returns output containing exit code, stdout, and stderr
+     * Executes a command in a running Docker container with streaming progress.
+     * Emits progress events containing stdout/stderr tails every time output arrives.
+     * The returned JobRef is auto-streamed to the LLM by the orchestrator.
      */
     public async execContainer(params: {
-        containerId: string,
-        command: string[],
-    }): Promise<IContainerOutStream> {
-        const { containerId, command } = params;
+        containerId: string;
+        command: string[];
+        tailBytes?: number;
+    }): Promise<JobRef> {
+        const { containerId, command, tailBytes = 4096 } = params;
+        const job = ProgressStore.createJob("docker.exec", { containerId, command });
+        console.log(`[DockerodeService.ts] Starting exec job ${job.id} on ${containerId}: ${JSON.stringify(command)}`);
 
-        try {
-            const container = this.getContainer(containerId);
-            const exec = await container.exec({
-                Cmd: command,
-                AttachStdout: true,
-                AttachStderr: true,
-                /*
-                stream is a Node Duplex stream carrying the exec I/O. 
-                In Tty:false it is the multiplexed binary format described above. 
-                In Tty:true it is a single raw byte stream.
-                */
-                Tty: false,
-            });
-            
-            const stream = await exec.start({
-                hijack: true,
-                stdin: false,
-            });
-            
-            const outChunks: Buffer[] = [];
-            const errChunks: Buffer[] = [];
-
-
-            container.modem.demuxStream(  // helper from dockerode’s underlying transport
-                stream,
-                { write: (c: Buffer) => outChunks.push(c) } as any,
-                { write: (c: Buffer) => errChunks.push(c) } as any,
-            )
-
-            const timer = setTimeout(() => {
-                stream.destroy(new Error("Exec command timed out, exec process may still be running."));
-            }, SGlobal.env.DOCKER_EXEC_TIMEOUT_MS);
-
-            const endPromise = finished(
-                stream,
-                ((err?: NodeJS.ErrnoException | null) => {
-                    if (err) {
-                        const err_msg = err instanceof Error ? err.message : String(err);
-                        console.error("[DockerodeService.ts] Error finishing stream:", err);
-                        throw new Error(`Exec command failed: ${err_msg}`);
-                    }
-                    console.log("[DockerodeService.ts] Stream finished successfully.");
-                })
-            );
-
+        (async () => {
             try {
-                endPromise;  // wait for `end`
-            } 
-            catch (err) {
+                ProgressStore.setRunning(job.id);
+                // initial event
+                ProgressStore.update(job.id, {
+                    ts: Date.now(),
+                    message: "starting",
+                    detail: { bytesOut: 0, bytesErr: 0, stdoutTail: "", stderrTail: "" }
+                });
+                const container = this.getContainer(containerId);
+                const exec = await container.exec({
+                    Cmd: command,
+                    AttachStdout: true,
+                    AttachStderr: true,
+                    Tty: false,
+                });
+
+                const stream = await exec.start({ hijack: true, stdin: false });
+
+                let bytesOut = 0;
+                let bytesErr = 0;
+                let stdoutTail = "";
+                let stderrTail = "";
+
+                const appendTail = (current: string, chunk: Buffer): string => {
+                    const appended = current + chunk.toString("utf-8");
+                    if (appended.length <= tailBytes) return appended;
+                    return appended.slice(appended.length - tailBytes);
+                };
+
+                // demux multiplexed stream into callbacks that update tails
+                (container as any).modem.demuxStream(
+                    stream,
+                    { write: (c: Buffer) => {
+                        bytesOut += c.length;
+                        stdoutTail = appendTail(stdoutTail, c);
+                        ProgressStore.update(job.id, {
+                            ts: Date.now(),
+                            message: "stdout",
+                            detail: { bytesOut, bytesErr, stdoutTail, stderrTail }
+                        });
+                    } } as any,
+                    { write: (c: Buffer) => {
+                        bytesErr += c.length;
+                        stderrTail = appendTail(stderrTail, c);
+                        ProgressStore.update(job.id, {
+                            ts: Date.now(),
+                            message: "stderr",
+                            detail: { bytesOut, bytesErr, stdoutTail, stderrTail }
+                        });
+                    } } as any,
+                );
+
+                const timer = setTimeout(() => {
+                    stream.destroy(new Error("Exec command timed out"));
+                }, SGlobal.env.DOCKER_EXEC_TIMEOUT_MS);
+
+                try {
+                    await new Promise<void>((resolve, reject) => finished(stream, (err) => err ? reject(err) : resolve()));
+                } finally {
+                    clearTimeout(timer);
+                }
+
+                // Poll for exit code; guard for short race
+                let exitCode: number | null = null;
+                for (let i = 0; i < 10; i++) {
+                    const info = await exec.inspect();
+                    if (info.ExitCode !== null) { exitCode = info.ExitCode; break; }
+                    await new Promise(r => setTimeout(r, 50));
+                }
+
+                const final = {
+                    containerId,
+                    command,
+                    exitCode: exitCode ?? 408,
+                    bytesOut,
+                    bytesErr,
+                    stdoutTail,
+                    stderrTail,
+                };
+                ProgressStore.finish(job.id, final);
+                console.log(`[DockerodeService.ts] Exec job ${job.id} finished with exitCode ${final.exitCode}`);
+            } catch (err) {
                 const err_msg = err instanceof Error ? err.message : String(err);
-                console.error("[DockerodeService.ts] Error finishing stream:", err);
-                throw new Error(`Exec command failed: ${err_msg}`);
-            } 
-            finally {
-                clearTimeout(timer);
+                console.error("[DockerodeService.ts] Exec job failed:", err_msg);
+                ProgressStore.fail(job.id, err);
             }
+        })();
 
-            // fetch exit code: slight races are possible, so loop briefly if needed
-            let exitCode: number | null = null;
-            for (let i = 0; i < 10; i++) {
-                const info = await exec.inspect();
-                if (info.ExitCode !== null) { exitCode = info.ExitCode; break; }
-                await new Promise(r => setTimeout(r, 50));  // 50ms wait for each loop (non-blocking)
+        return ProgressStore.toRef(job);
+    }
+
+    /**
+     * Pull a Docker image by reference (e.g., "nginx:latest") and stream progress as a background job.
+     * @param ref - Image reference
+     * @param auth - Optional authentication config for private registries
+     * @returns A JobRef representing the background job
+     */
+    public async pullImage(params: { ref: string, auth?: Docker.AuthConfig }): Promise<JobRef> {
+        const { ref, auth } = params;
+        const job = ProgressStore.createJob("docker.pull", { ref });
+        console.log(`[DockerodeService.ts] Starting image pull job ${job.id} for ${ref}`);
+
+        // fire-and-forget async task
+        (async () => {
+            try {
+                ProgressStore.setRunning(job.id);
+                const stream = await this.docker.pull(ref, auth ? { authconfig: auth } : undefined as any);
+
+                const layers: Record<string, { status?: string; current?: number; total?: number; percent?: number; }> = {};
+                let overallPhase: PullProgressDetail["phase"] = "resolving";
+                let lastEmitTs = 0;
+                let digest: string | undefined;
+                let resultStatus: string = "downloaded";
+
+                const emitProgress = (message?: string) => {
+                    const now = Date.now();
+                    // emit frequently; reporter throttles to 5s for LLM messages
+                    const overallPercent = computeOverallPercent(layers);
+                    const ev: ProgressEvent = {
+                        ts: now,
+                        message,
+                        detail: {
+                            phase: overallPhase,
+                            percent: overallPercent ?? undefined,
+                            layers,
+                            ref,
+                        } as PullProgressDetail,
+                    };
+                    ProgressStore.update(job.id, ev);
+                    lastEmitTs = now;
+                };
+
+                await new Promise<void>((resolve, reject) => {
+                    // followProgress calls onFinished when all pull operations complete
+                    (this.docker as any).modem.followProgress(
+                        stream,
+                        (err: any, _output: any[]) => {
+                            if (err) return reject(err);
+                            resolve();
+                        },
+                        (event: any) => {
+                            // event shape: { status, id?, progressDetail?, aux? }
+                            const status: string = event?.status ?? "";
+                            const id: string | undefined = event?.id ?? undefined;
+                            const pd: { current?: number; total?: number } | undefined = event?.progressDetail;
+                            const aux = event?.aux;
+
+                            if (aux && typeof aux.Digest === "string") {
+                                digest = aux.Digest;
+                            }
+                            if (status.includes("Already exists")) {
+                                resultStatus = "already-exists";
+                            }
+
+                            if (status) {
+                                if (/Downloading/i.test(status)) overallPhase = "downloading";
+                                else if (/Extracting/i.test(status)) overallPhase = "extracting";
+                                else if (/Verifying/i.test(status)) overallPhase = "verifying";
+                                else if (/Pull complete|Download complete/i.test(status)) overallPhase = "done";
+                                else if (/Waiting/i.test(status)) overallPhase = "waiting";
+                            }
+                            if (id) {
+                                const layer = layers[id] ?? {};
+                                layer.status = status || layer.status;
+                                if (pd && typeof pd.total === "number" && pd.total > 0) {
+                                    layer.current = pd.current ?? layer.current ?? 0;
+                                    layer.total = pd.total;
+                                    layer.percent = Math.max(0, Math.min(100, Math.floor(((layer.current ?? 0) / pd.total) * 100)));
+                                }
+                                layers[id] = layer;
+                            }
+
+                            emitProgress(status || undefined);
+                        }
+                    );
+                });
+
+                const final = { ref, digest, status: resultStatus };
+                ProgressStore.finish(job.id, final);
+                console.log(`[DockerodeService.ts] Image pull job ${job.id} for ${ref} finished (${resultStatus})`);
+            } catch (err) {
+                const err_msg = err instanceof Error ? err.message : String(err);
+                console.error(`[DockerodeService.ts] Image pull job ${job.id} failed:`, err_msg);
+                ProgressStore.fail(job.id, err);
             }
+        })();
 
-            return {
-                ExitCode: exitCode ?? 408,  // if none, regard as failure at above loop. timeout 408
-                StdOut: Buffer.concat(outChunks).toString("utf-8"),
-                StdErr: Buffer.concat(errChunks).toString("utf-8"),
-            }
+        return ProgressStore.toRef(job);
+    }
+}
 
-        } catch (err) {
-            const err_msg = err instanceof Error ? err.message : String(err);
-            console.error("[DockerodeService.ts] Error executing command in Docker container:", err);
-            throw new Error(`Failed to execute command in Docker container: ${err_msg}`);
+function computeOverallPercent(layers: Record<string, { status?: string; current?: number; total?: number; percent?: number; }>): number | null {
+    const values = Object.values(layers);
+    let sumCurrent = 0;
+    let sumTotal = 0;
+    for (const l of values) {
+        if (typeof l.total === "number" && l.total > 0) {
+            sumCurrent += Math.min(l.current ?? 0, l.total);
+            sumTotal += l.total;
         }
     }
+    if (sumTotal > 0) {
+        return Math.max(0, Math.min(100, Math.floor((sumCurrent / sumTotal) * 100)));
+    }
+    // fallback: based on count of layers with status "Pull complete" or percent 100
+    if (values.length > 0) {
+        const done = values.filter(l => (l.percent ?? 0) >= 100 || /complete/i.test(l.status ?? "")).length;
+        return Math.floor((done / values.length) * 100);
+    }
+    return null;
 }

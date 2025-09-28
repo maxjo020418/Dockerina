@@ -33,7 +33,8 @@ important safety rules to follow while orchestrating Docker workloads.
 | `runContainer({ image, ... })` | Create and start a new container. | `image`, optional `name`, `command`, `env`, `ports`. | Container handle. |
 | `stopAllDockerinaContainers()` | Stop every container whose name starts with `Dockerina-`. | _none_ | `void`. |
 | `removeAllDockerinaContainers()` | Stop (if needed) and delete every `Dockerina-…` container. | _none_ | `void`. |
-| `execContainer({ containerId, command })` | Run a non-interactive command in a running container. | `containerId`, `command[]`. | `{ ExitCode, StdOut, StdErr }`. |
+| `execContainer({ containerId, command })` | Execute command with streaming progress. | `containerId`, `command[]`. | Final result after streaming; progress messages every ~5s. |
+| `pullImage({ ref })` | Pull an image by tag/digest with progress streaming. | `ref` – e.g. `"nginx:latest"`. | Final result after streaming; progress messages every ~5s. |
 
 ## Method details
 ### `listContainers()`
@@ -88,14 +89,17 @@ important safety rules to follow while orchestrating Docker workloads.
   options at the end of scripted runs.
 
 ### `execContainer({ containerId, command })`
-- Creates a non-TTY exec session (`Tty: false`) so stdout and stderr are
-  separated.
-- Output is demultiplexed via `docker.modem.demuxStream` and returned as UTF-8
-  strings.
-- A soft timeout of 10 seconds is enforced.  If `ExitCode` stays `null`, the
-  service returns `408` to signal a timeout.
-- Use for quick diagnostic commands (`['ls','-l','/app']`) rather than long
-  interactive sessions.
+- Starts a background job to run the command and immediately returns a job reference.
+- The orchestrator streams progress updates every ~5 seconds with rolling stdout/stderr tails.
+- Non‑TTY (`Tty: false`) demultiplexes stdout/stderr for clearer reporting.
+- Timeout follows `DOCKER_EXEC_TIMEOUT_MS` (default 30s). On timeout, stream is aborted and the job fails.
+- Final result includes: `{ containerId, command, exitCode, bytesOut, bytesErr, stdoutTail, stderrTail }`.
+
+### `pullImage({ ref })`
+- Starts a background job to pull the image and immediately returns a job reference.
+- The orchestrator detects this job and streams progress updates to the LLM every ~5 seconds.
+- Progress includes overall percent, phase, and per-layer completion counts.
+- The function result delivered to the LLM after streaming ends contains a summary like `{ ref, digest?, status }` where `status` is one of `"downloaded" | "already-exists"`.
 
 ## Usage playbooks
 - **Inspect failing container**
