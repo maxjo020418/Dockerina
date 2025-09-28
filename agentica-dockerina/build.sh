@@ -76,8 +76,10 @@ OPENAI_API_KEY=NO_KEY
 BASE_URL=http://localhost:11434/v1
 MODEL=qwen3:14b
 PORT=3000
+ENABLE_HTTP_LOGGING=false
 DOCKER_HOST=unix:///var/run/docker.sock
 DOCKER_PORT=2375
+DOCKER_EXEC_TIMEOUT_MS=30000
 EOF
         print_success "Created server/.env file with default values"
     else

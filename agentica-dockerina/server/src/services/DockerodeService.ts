@@ -439,7 +439,6 @@ export class DockerodeService {
     }
 
 
-    private static EXEC_TIMEOUT_MS: number = 10_000;
     /**
      * Executes a command in a running Docker container.
      * @param containerId - ID of the container
@@ -483,7 +482,7 @@ export class DockerodeService {
 
             const timer = setTimeout(() => {
                 stream.destroy(new Error("Exec command timed out, exec process may still be running."));
-            }, DockerodeService.EXEC_TIMEOUT_MS);
+            }, SGlobal.env.DOCKER_EXEC_TIMEOUT_MS);
 
             const endPromise = finished(
                 stream,

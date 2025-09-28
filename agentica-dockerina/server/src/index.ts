@@ -6,7 +6,6 @@ NOTES:
 import {
   Agentica,
   IAgenticaHistoryJson,
-  IAgenticaExecutor
 } from "@agentica/core";
 
 import {
@@ -26,7 +25,7 @@ import type { ILlmSchema } from "@samchon/openapi/lib/structures/ILlmSchema";
 import { setupFetchInterceptor } from "./utils/httpLogger";
 
 // tools
-import { BbsArticleService } from "./services/BbsArticleService";
+// import { BbsArticleService } from "./services/BbsArticleService";
 import { DockerodeService } from "./services/DockerodeService";
 
 // custom stuffs
@@ -35,9 +34,6 @@ import { ollamaCall } from "./OllamaOrchestrate/OllamaCall";
 import { ollamaExecute } from "./OllamaOrchestrate/OllamaExecute";
 import { ollamaCancel } from "./OllamaOrchestrate/OllamaCancel";
 import { ollamaDescribe } from "./OllamaOrchestrate/OllamaDescribe";
-
-// Configuration
-const ENABLE_HTTP_LOGGING = false; // Set to false to disable HTTP request/response logging
 
 const getPromptHistories = async (
   id: string,
@@ -49,7 +45,7 @@ const getPromptHistories = async (
 
 const main = async (): Promise<void> => {
   // Enable HTTP request logging (optional)
-  if (ENABLE_HTTP_LOGGING) {
+  if (SGlobal.env.ENABLE_HTTP_LOGGING) {
     setupFetchInterceptor();
     console.log("=== HTTP request logging enabled ===");
   } else {
