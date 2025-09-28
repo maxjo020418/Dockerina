@@ -44,104 +44,6 @@ export class DockerodeService {
         this.docker = new Docker(docker_options);
     }
 
-    /**
-     * Pull a Docker image by reference (e.g., "nginx:latest") and stream progress as a background job.
-     * Returns a JobRef; the orchestrator will stream progress updates to the LLM every ~5s
-     * and provide the final result upon completion.
-     */
-    public async pullImage(params: { ref: string, auth?: Docker.AuthConfig }): Promise<JobRef> {
-        const { ref, auth } = params;
-        const job = ProgressStore.createJob("docker.pull", { ref });
-        console.log(`[DockerodeService.ts] Starting image pull job ${job.id} for ${ref}`);
-
-        // fire-and-forget async task
-        (async () => {
-            try {
-                ProgressStore.setRunning(job.id);
-                const stream = await this.docker.pull(ref, auth ? { authconfig: auth } : undefined as any);
-
-                const layers: Record<string, { status?: string; current?: number; total?: number; percent?: number; }> = {};
-                let overallPhase: PullProgressDetail["phase"] = "resolving";
-                let lastEmitTs = 0;
-                let digest: string | undefined;
-                let resultStatus: string = "downloaded";
-
-                const emitProgress = (message?: string) => {
-                    const now = Date.now();
-                    // emit frequently; reporter throttles to 5s for LLM messages
-                    const overallPercent = computeOverallPercent(layers);
-                    const ev: ProgressEvent = {
-                        ts: now,
-                        message,
-                        detail: {
-                            phase: overallPhase,
-                            percent: overallPercent ?? undefined,
-                            layers,
-                            ref,
-                        } as PullProgressDetail,
-                    };
-                    ProgressStore.update(job.id, ev);
-                    lastEmitTs = now;
-                };
-
-                await new Promise<void>((resolve, reject) => {
-                    // followProgress calls onFinished when all pull operations complete
-                    (this.docker as any).modem.followProgress(
-                        stream,
-                        (err: any, _output: any[]) => {
-                            if (err) return reject(err);
-                            resolve();
-                        },
-                        (event: any) => {
-                            // event shape: { status, id?, progressDetail?, aux? }
-                            const status: string = event?.status ?? "";
-                            const id: string | undefined = event?.id ?? undefined;
-                            const pd: { current?: number; total?: number } | undefined = event?.progressDetail;
-                            const aux = event?.aux;
-
-                            if (aux && typeof aux.Digest === "string") {
-                                digest = aux.Digest;
-                            }
-                            if (status.includes("Already exists")) {
-                                resultStatus = "already-exists";
-                            }
-
-                            if (status) {
-                                if (/Downloading/i.test(status)) overallPhase = "downloading";
-                                else if (/Extracting/i.test(status)) overallPhase = "extracting";
-                                else if (/Verifying/i.test(status)) overallPhase = "verifying";
-                                else if (/Pull complete|Download complete/i.test(status)) overallPhase = "done";
-                                else if (/Waiting/i.test(status)) overallPhase = "waiting";
-                            }
-                            if (id) {
-                                const layer = layers[id] ?? {};
-                                layer.status = status || layer.status;
-                                if (pd && typeof pd.total === "number" && pd.total > 0) {
-                                    layer.current = pd.current ?? layer.current ?? 0;
-                                    layer.total = pd.total;
-                                    layer.percent = Math.max(0, Math.min(100, Math.floor(((layer.current ?? 0) / pd.total) * 100)));
-                                }
-                                layers[id] = layer;
-                            }
-
-                            emitProgress(status || undefined);
-                        }
-                    );
-                });
-
-                const final = { ref, digest, status: resultStatus };
-                ProgressStore.finish(job.id, final);
-                console.log(`[DockerodeService.ts] Image pull job ${job.id} for ${ref} finished (${resultStatus})`);
-            } catch (err) {
-                const err_msg = err instanceof Error ? err.message : String(err);
-                console.error(`[DockerodeService.ts] Image pull job ${job.id} failed:`, err_msg);
-                ProgressStore.fail(job.id, err);
-            }
-        })();
-
-        return ProgressStore.toRef(job);
-    }
-
     // so that instance is only initialized once!
     public static getInstance(): DockerodeService {
         if (!DockerodeService.instance) {
@@ -627,7 +529,104 @@ export class DockerodeService {
         }
     }
 
-    
+    /**
+     * Pull a Docker image by reference (e.g., "nginx:latest") and stream progress as a background job.
+     * @param ref - Image reference
+     * @param auth - Optional authentication config for private registries
+     * @returns A JobRef representing the background job
+     */
+    public async pullImage(params: { ref: string, auth?: Docker.AuthConfig }): Promise<JobRef> {
+        const { ref, auth } = params;
+        const job = ProgressStore.createJob("docker.pull", { ref });
+        console.log(`[DockerodeService.ts] Starting image pull job ${job.id} for ${ref}`);
+
+        // fire-and-forget async task
+        (async () => {
+            try {
+                ProgressStore.setRunning(job.id);
+                const stream = await this.docker.pull(ref, auth ? { authconfig: auth } : undefined as any);
+
+                const layers: Record<string, { status?: string; current?: number; total?: number; percent?: number; }> = {};
+                let overallPhase: PullProgressDetail["phase"] = "resolving";
+                let lastEmitTs = 0;
+                let digest: string | undefined;
+                let resultStatus: string = "downloaded";
+
+                const emitProgress = (message?: string) => {
+                    const now = Date.now();
+                    // emit frequently; reporter throttles to 5s for LLM messages
+                    const overallPercent = computeOverallPercent(layers);
+                    const ev: ProgressEvent = {
+                        ts: now,
+                        message,
+                        detail: {
+                            phase: overallPhase,
+                            percent: overallPercent ?? undefined,
+                            layers,
+                            ref,
+                        } as PullProgressDetail,
+                    };
+                    ProgressStore.update(job.id, ev);
+                    lastEmitTs = now;
+                };
+
+                await new Promise<void>((resolve, reject) => {
+                    // followProgress calls onFinished when all pull operations complete
+                    (this.docker as any).modem.followProgress(
+                        stream,
+                        (err: any, _output: any[]) => {
+                            if (err) return reject(err);
+                            resolve();
+                        },
+                        (event: any) => {
+                            // event shape: { status, id?, progressDetail?, aux? }
+                            const status: string = event?.status ?? "";
+                            const id: string | undefined = event?.id ?? undefined;
+                            const pd: { current?: number; total?: number } | undefined = event?.progressDetail;
+                            const aux = event?.aux;
+
+                            if (aux && typeof aux.Digest === "string") {
+                                digest = aux.Digest;
+                            }
+                            if (status.includes("Already exists")) {
+                                resultStatus = "already-exists";
+                            }
+
+                            if (status) {
+                                if (/Downloading/i.test(status)) overallPhase = "downloading";
+                                else if (/Extracting/i.test(status)) overallPhase = "extracting";
+                                else if (/Verifying/i.test(status)) overallPhase = "verifying";
+                                else if (/Pull complete|Download complete/i.test(status)) overallPhase = "done";
+                                else if (/Waiting/i.test(status)) overallPhase = "waiting";
+                            }
+                            if (id) {
+                                const layer = layers[id] ?? {};
+                                layer.status = status || layer.status;
+                                if (pd && typeof pd.total === "number" && pd.total > 0) {
+                                    layer.current = pd.current ?? layer.current ?? 0;
+                                    layer.total = pd.total;
+                                    layer.percent = Math.max(0, Math.min(100, Math.floor(((layer.current ?? 0) / pd.total) * 100)));
+                                }
+                                layers[id] = layer;
+                            }
+
+                            emitProgress(status || undefined);
+                        }
+                    );
+                });
+
+                const final = { ref, digest, status: resultStatus };
+                ProgressStore.finish(job.id, final);
+                console.log(`[DockerodeService.ts] Image pull job ${job.id} for ${ref} finished (${resultStatus})`);
+            } catch (err) {
+                const err_msg = err instanceof Error ? err.message : String(err);
+                console.error(`[DockerodeService.ts] Image pull job ${job.id} failed:`, err_msg);
+                ProgressStore.fail(job.id, err);
+            }
+        })();
+
+        return ProgressStore.toRef(job);
+    }
 }
 
 function computeOverallPercent(layers: Record<string, { status?: string; current?: number; total?: number; percent?: number; }>): number | null {

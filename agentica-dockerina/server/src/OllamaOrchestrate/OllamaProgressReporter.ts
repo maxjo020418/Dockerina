@@ -24,7 +24,7 @@ export async function streamProgress<Model extends ILlmSchema.Model>(
   let lastSentTs = 0;
   const send = (text: string) => {
     const event: AgenticaAssistantMessageEvent = createAssistantMessageEvent({
-      get: () => text,
+      get: () => "```" + text + "```",
       done: () => true,
       stream: toAsyncGenerator(text),
       join: async () => Promise.resolve(text),
