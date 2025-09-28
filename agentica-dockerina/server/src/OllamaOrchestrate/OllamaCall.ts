@@ -254,7 +254,7 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
       const thinks = extractThinkBlocks(choice.message.content);
       if (thinks.length > 0) {
         const event: AgenticaAssistantMessageEvent = createAssistantMessageEvent({
-          get: () => "## *CALL AGENT*\n\n" + thinks,
+          get: () => thinks, // "## *CALL AGENT*\n\n" + 
           done: () => true,
           stream: toAsyncGenerator(thinks),
           join: async () => Promise.resolve(thinks),
@@ -272,7 +272,7 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
     ) {
       const text: string = choice.message.content;
       const event: AgenticaAssistantMessageEvent = createAssistantMessageEvent({
-        get: () => "## *CALL AGENT*\n\n" + text,
+        get: () => text, // "## *CALL AGENT*\n\n" + 
         done: () => true,
         stream: toAsyncGenerator(text),
         join: async () => Promise.resolve(text),
