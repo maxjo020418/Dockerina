@@ -440,6 +440,25 @@ export class DockerodeService {
     }
 
     /**
+     * Removes a Docker image by its ID or tag.
+     * @param params.id - Image identifier or tag
+     * @param params.force - Force removal even if the image is used by containers
+     * @param params.pruneChildren - Also remove untagged parent images
+     */
+    public async removeImage(params: { id: string; force?: boolean; pruneChildren?: boolean }): Promise<void> {
+        const { id, force = false, pruneChildren = false } = params;
+        try {
+            const image = this.docker.getImage(id);
+            await image.remove({ force, noprune: !pruneChildren });
+            console.log(`[DockerodeService.ts] Docker image ${id} removed successfully.`);
+        } catch (err) {
+            const err_msg = err instanceof Error ? err.message : String(err);
+            console.error("[DockerodeService.ts] Error removing Docker image:", err);
+            throw new Error(`Failed to remove Docker image: ${err_msg}`);
+        }
+    }
+
+    /**
      * Executes a command in a running Docker container with streaming progress.
      * Emits progress events containing stdout/stderr tails every time output arrives.
      * The returned JobRef is auto-streamed to the LLM by the orchestrator.
