@@ -109,7 +109,7 @@ const main = async (): Promise<void> => {
             // don't need to comply to specific formats
             // only used for AgenticaSystemPrompt.COMMON
             // ------------------
-            locale: "English",
+            locale: SGlobal.env.LANGUAGE,
             // timezone: "", // auto default
             // ------------------
 

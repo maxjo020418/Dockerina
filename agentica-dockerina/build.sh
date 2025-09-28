@@ -75,6 +75,7 @@ setup_env_files() {
 OPENAI_API_KEY=NO_KEY
 BASE_URL=http://localhost:11434/v1
 MODEL=qwen3:14b
+LANGUAGE=english
 PORT=3000
 ENABLE_HTTP_LOGGING=false
 DOCKER_HOST=unix:///var/run/docker.sock
