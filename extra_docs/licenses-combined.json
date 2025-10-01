@@ -1,0 +1,632 @@
+[
+  {
+    "ecosystem": "npm-client",
+    "name": "@agentica/core",
+    "version": "0.29.6",
+    "license": "MIT",
+    "repository": "https://github.com/wrtnlabs/agentica",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@agentica/core/LICENSE",
+    "publisher": "Wrtn Technologies",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "@agentica/rpc",
+    "version": "0.29.6",
+    "license": "MIT",
+    "repository": "https://github.com/wrtnlabs/agentica",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@agentica/rpc/LICENSE",
+    "publisher": "Wrtn Technologies",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "@tailwindcss/vite",
+    "version": "4.1.11",
+    "license": "MIT",
+    "repository": "https://github.com/tailwindlabs/tailwindcss",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@tailwindcss/vite/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "@types/prismjs",
+    "version": "1.26.5",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@types/prismjs/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "@types/react",
+    "version": "19.1.8",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@types/react/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "@types/react-dom",
+    "version": "19.1.6",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@types/react-dom/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "@vitejs/plugin-react",
+    "version": "4.7.0",
+    "license": "MIT",
+    "repository": "https://github.com/vitejs/vite-plugin-react",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@vitejs/plugin-react/LICENSE",
+    "publisher": "Evan You",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "globals",
+    "version": "15.15.0",
+    "license": "MIT",
+    "repository": "https://github.com/sindresorhus/globals",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/globals/license",
+    "publisher": "Sindre Sorhus",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "highlight.js",
+    "version": "11.11.1",
+    "license": "BSD-3-Clause",
+    "repository": "https://github.com/highlightjs/highlight.js",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/highlight.js/LICENSE",
+    "publisher": "Josh Goebel",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "prismjs",
+    "version": "1.30.0",
+    "license": "MIT",
+    "repository": "https://github.com/PrismJS/prism",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/prismjs/LICENSE",
+    "publisher": "Lea Verou",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "react",
+    "version": "19.1.0",
+    "license": "MIT",
+    "repository": "https://github.com/facebook/react",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/react/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "react-dom",
+    "version": "19.1.0",
+    "license": "MIT",
+    "repository": "https://github.com/facebook/react",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/react-dom/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "react-markdown",
+    "version": "10.1.0",
+    "license": "MIT",
+    "repository": "https://github.com/remarkjs/react-markdown",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/react-markdown/license",
+    "publisher": "Espen Hovlandsdal",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "rehype-highlight",
+    "version": "7.0.2",
+    "license": "MIT",
+    "repository": "https://github.com/rehypejs/rehype-highlight",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/rehype-highlight/license",
+    "publisher": "Titus Wormer",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "remark-gfm",
+    "version": "4.0.1",
+    "license": "MIT",
+    "repository": "https://github.com/remarkjs/remark-gfm",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/remark-gfm/license",
+    "publisher": "Titus Wormer",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "tailwindcss",
+    "version": "4.1.11",
+    "license": "MIT",
+    "repository": "https://github.com/tailwindlabs/tailwindcss",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/tailwindcss/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "tgrid",
+    "version": "1.2.0",
+    "license": "MIT",
+    "repository": "https://github.com/samchon/tgrid",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/tgrid/LICENSE",
+    "publisher": "Jeongho Nam",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "typescript",
+    "version": "5.8.3",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/microsoft/TypeScript",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/typescript/LICENSE.txt",
+    "publisher": "Microsoft Corp.",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-client",
+    "name": "vite",
+    "version": "6.3.5",
+    "license": "MIT",
+    "repository": "https://github.com/vitejs/vite",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/vite/LICENSE.md",
+    "publisher": "Evan You",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@agentica/core",
+    "version": "0.29.0",
+    "license": "MIT",
+    "repository": "https://github.com/wrtnlabs/agentica",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/LICENSE",
+    "publisher": "Wrtn Technologies",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@agentica/rpc",
+    "version": "0.29.0",
+    "license": "MIT",
+    "repository": "https://github.com/wrtnlabs/agentica",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/rpc/LICENSE",
+    "publisher": "Wrtn Technologies",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@modelcontextprotocol/sdk",
+    "version": "1.15.0",
+    "license": "MIT",
+    "repository": "https://github.com/modelcontextprotocol/typescript-sdk",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@modelcontextprotocol/sdk/LICENSE",
+    "publisher": "Anthropic, PBC",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@nestia/e2e",
+    "version": "6.0.6",
+    "license": "MIT",
+    "repository": "https://github.com/samchon/nestia",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@nestia/e2e/LICENSE",
+    "publisher": "Jeongho Nam",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@rollup/plugin-terser",
+    "version": "0.4.4",
+    "license": "MIT",
+    "repository": "https://github.com/rollup/plugins",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@rollup/plugin-terser/README.md",
+    "publisher": "Peter Placzek",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@rollup/plugin-typescript",
+    "version": "12.1.4",
+    "license": "MIT",
+    "repository": "https://github.com/rollup/plugins",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@rollup/plugin-typescript/LICENSE",
+    "publisher": "Oskar Segersvärd",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@ryoppippi/unplugin-typia",
+    "version": "2.6.5",
+    "license": "MIT",
+    "repository": "https://github.com/ryoppippi/unplugin-typia",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@ryoppippi/unplugin-typia/LICENSE",
+    "publisher": "ryoppippi",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@samchon/openapi",
+    "version": "4.3.3",
+    "license": "MIT",
+    "repository": "https://github.com/samchon/openapi",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@samchon/openapi/LICENSE",
+    "publisher": "Jeongho Nam",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@samchon/shopping-api",
+    "version": "0.17.0",
+    "license": "MIT",
+    "repository": "https://github.com/samchon/shopping-backend",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/rpc/node_modules/@samchon/shopping-api/LICENSE",
+    "publisher": "AUTHOR",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@trivago/prettier-plugin-sort-imports",
+    "version": "5.2.2",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/trivago/prettier-plugin-sort-imports",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@trivago/prettier-plugin-sort-imports/LICENSE",
+    "publisher": "Ayush Sharma",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@types/dockerode",
+    "version": "3.3.42",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@types/dockerode/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@types/node",
+    "version": "22.16.0",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@types/node/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@types/uuid",
+    "version": "10.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@types/uuid/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "@wrtnlabs/calculator-mcp",
+    "version": "0.2.1",
+    "license": "MIT*",
+    "repository": "https://github.com/wrtnlabs/calculator-mcp",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@wrtnlabs/calculator-mcp/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "dockerode",
+    "version": "4.0.7",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/apocas/dockerode",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/dockerode/LICENSE",
+    "publisher": "Pedro Dias",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "dotenv",
+    "version": "16.6.1",
+    "license": "BSD-2-Clause",
+    "repository": "https://github.com/motdotla/dotenv",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/dotenv/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "dotenv-expand",
+    "version": "12.0.2",
+    "license": "BSD-2-Clause",
+    "repository": "https://github.com/motdotla/dotenv-expand",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/dotenv-expand/LICENSE",
+    "publisher": "motdotla",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "openai",
+    "version": "5.8.2",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/openai/openai-node",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/openai/LICENSE",
+    "publisher": "OpenAI",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "prettier",
+    "version": "3.6.2",
+    "license": "MIT",
+    "repository": "https://github.com/prettier/prettier",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/prettier/LICENSE",
+    "publisher": "James Long",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "rimraf",
+    "version": "6.0.1",
+    "license": "ISC",
+    "repository": "https://github.com/isaacs/rimraf",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/rimraf/LICENSE",
+    "publisher": "Isaac Z. Schlueter",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "rollup",
+    "version": "4.44.2",
+    "license": "MIT",
+    "repository": "https://github.com/rollup/rollup",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/rollup/LICENSE.md",
+    "publisher": "Rich Harris",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "tgrid",
+    "version": "1.1.0",
+    "license": "MIT",
+    "repository": "https://github.com/samchon/tgrid",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/tgrid/LICENSE",
+    "publisher": "Jeongho Nam",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "ts-node",
+    "version": "10.9.2",
+    "license": "MIT",
+    "repository": "https://github.com/TypeStrong/ts-node",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/ts-node/LICENSE",
+    "publisher": "Blake Embrey",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "ts-patch",
+    "version": "3.3.0",
+    "license": "MIT",
+    "repository": "https://github.com/nonara/ts-patch",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/ts-patch/LICENSE.md",
+    "publisher": "Ron S.",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "tstl",
+    "version": "3.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/samchon/tstl",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/tstl/LICENSE",
+    "publisher": "Jeongho Nam",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "typedoc",
+    "version": "0.27.9",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/TypeStrong/TypeDoc",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/typedoc/LICENSE",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "typescript",
+    "version": "5.8.3",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/microsoft/TypeScript",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/typescript/LICENSE.txt",
+    "publisher": "Microsoft Corp.",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "typia",
+    "version": "9.3.1",
+    "license": "MIT",
+    "repository": "https://github.com/samchon/typia",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/typia/LICENSE",
+    "publisher": "Jeongho Nam",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "uuid",
+    "version": "11.1.0",
+    "license": "MIT",
+    "repository": "https://github.com/uuidjs/uuid",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/uuid/LICENSE.md",
+    "publisher": "",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "npm-server",
+    "name": "vitest",
+    "version": "3.2.4",
+    "license": "MIT",
+    "repository": "https://github.com/vitest-dev/vitest",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/vitest/LICENSE.md",
+    "publisher": "Anthony Fu",
+    "sourceFile": "license-checker"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "blinker",
+    "version": "1.9.0",
+    "license": "MIT License",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "certifi",
+    "version": "2025.8.3",
+    "license": "Mozilla Public License 2.0 (MPL 2.0)",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "charset-normalizer",
+    "version": "3.4.3",
+    "license": "MIT",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "click",
+    "version": "8.2.1",
+    "license": "UNKNOWN",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "dotenv",
+    "version": "0.9.9",
+    "license": "UNKNOWN",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "Flask",
+    "version": "3.1.2",
+    "license": "UNKNOWN",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "idna",
+    "version": "3.10",
+    "license": "BSD License",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "itsdangerous",
+    "version": "2.2.0",
+    "license": "BSD License",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "Jinja2",
+    "version": "3.1.6",
+    "license": "BSD License",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "MarkupSafe",
+    "version": "3.0.2",
+    "license": "BSD License",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "python-dotenv",
+    "version": "1.1.1",
+    "license": "BSD License",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "requests",
+    "version": "2.32.5",
+    "license": "Apache Software License",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "urllib3",
+    "version": "2.5.0",
+    "license": "UNKNOWN",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  },
+  {
+    "ecosystem": "pip",
+    "name": "Werkzeug",
+    "version": "3.1.3",
+    "license": "BSD License",
+    "repository": "",
+    "licenseFile": "",
+    "publisher": "",
+    "sourceFile": "pip-licenses"
+  }
+]

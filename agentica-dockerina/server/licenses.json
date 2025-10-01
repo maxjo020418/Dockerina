@@ -1,0 +1,229 @@
+{
+  "@agentica/core@0.29.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/wrtnlabs/agentica",
+    "publisher": "Wrtn Technologies",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/LICENSE"
+  },
+  "@agentica/rpc@0.29.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/wrtnlabs/agentica",
+    "publisher": "Wrtn Technologies",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/rpc",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/rpc/LICENSE"
+  },
+  "@modelcontextprotocol/sdk@1.15.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/modelcontextprotocol/typescript-sdk",
+    "publisher": "Anthropic, PBC",
+    "url": "https://anthropic.com",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@modelcontextprotocol/sdk",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@modelcontextprotocol/sdk/LICENSE"
+  },
+  "@nestia/e2e@6.0.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/samchon/nestia",
+    "publisher": "Jeongho Nam",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@nestia/e2e",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@nestia/e2e/LICENSE"
+  },
+  "@rollup/plugin-terser@0.4.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/rollup/plugins",
+    "publisher": "Peter Placzek",
+    "email": "peter.placzek1996@gmail.com",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@rollup/plugin-terser",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@rollup/plugin-terser/README.md"
+  },
+  "@rollup/plugin-typescript@12.1.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/rollup/plugins",
+    "publisher": "Oskar Segersvärd",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@rollup/plugin-typescript",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@rollup/plugin-typescript/LICENSE"
+  },
+  "@ryoppippi/unplugin-typia@2.6.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ryoppippi/unplugin-typia",
+    "publisher": "ryoppippi",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@ryoppippi/unplugin-typia",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@ryoppippi/unplugin-typia/LICENSE"
+  },
+  "@samchon/openapi@4.3.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/samchon/openapi",
+    "publisher": "Jeongho Nam",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@samchon/openapi",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@samchon/openapi/LICENSE"
+  },
+  "@samchon/shopping-api@0.17.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/samchon/shopping-backend",
+    "publisher": "AUTHOR",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/rpc/node_modules/@samchon/shopping-api",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/rpc/node_modules/@samchon/shopping-api/LICENSE"
+  },
+  "@trivago/prettier-plugin-sort-imports@5.2.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/trivago/prettier-plugin-sort-imports",
+    "publisher": "Ayush Sharma",
+    "email": "ayush.sharma@trivago.com",
+    "url": "https://github.com/ayusharma",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@trivago/prettier-plugin-sort-imports",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@trivago/prettier-plugin-sort-imports/LICENSE"
+  },
+  "@types/dockerode@3.3.42": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@types/dockerode",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@types/dockerode/LICENSE"
+  },
+  "@types/node@22.16.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@types/node",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@types/node/LICENSE"
+  },
+  "@types/uuid@10.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@types/uuid",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@types/uuid/LICENSE"
+  },
+  "@wrtnlabs/calculator-mcp@0.2.1": {
+    "licenses": "MIT*",
+    "repository": "https://github.com/wrtnlabs/calculator-mcp",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@wrtnlabs/calculator-mcp",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/@wrtnlabs/calculator-mcp/LICENSE"
+  },
+  "agentica-template-nodejs@0.1.0": {
+    "licenses": "UNLICENSED",
+    "private": true,
+    "publisher": "Wrtn Technologies",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/LICENSE"
+  },
+  "dockerode@4.0.7": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/apocas/dockerode",
+    "publisher": "Pedro Dias",
+    "email": "petermdias@gmail.com",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/dockerode",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/dockerode/LICENSE"
+  },
+  "dotenv-expand@12.0.2": {
+    "licenses": "BSD-2-Clause",
+    "repository": "https://github.com/motdotla/dotenv-expand",
+    "publisher": "motdotla",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/dotenv-expand",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/dotenv-expand/LICENSE"
+  },
+  "dotenv@16.6.1": {
+    "licenses": "BSD-2-Clause",
+    "repository": "https://github.com/motdotla/dotenv",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/dotenv",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/dotenv/LICENSE"
+  },
+  "openai@5.8.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/openai/openai-node",
+    "publisher": "OpenAI",
+    "email": "support@openai.com",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/openai",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/openai/LICENSE"
+  },
+  "prettier@3.6.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/prettier/prettier",
+    "publisher": "James Long",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/prettier",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/prettier/LICENSE"
+  },
+  "rimraf@6.0.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/rimraf",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/rimraf",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/rimraf/LICENSE"
+  },
+  "rollup@4.44.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/rollup/rollup",
+    "publisher": "Rich Harris",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/rollup",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/rollup/LICENSE.md"
+  },
+  "tgrid@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/samchon/tgrid",
+    "publisher": "Jeongho Nam",
+    "email": "samchon.github@gmail.com",
+    "url": "https://github.com/samchon",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/tgrid",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/tgrid/LICENSE"
+  },
+  "ts-node@10.9.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TypeStrong/ts-node",
+    "publisher": "Blake Embrey",
+    "email": "hello@blakeembrey.com",
+    "url": "http://blakeembrey.me",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/ts-node",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/ts-node/LICENSE"
+  },
+  "ts-patch@3.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nonara/ts-patch",
+    "publisher": "Ron S.",
+    "url": "http://twitter.com/ron",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/ts-patch",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/ts-patch/LICENSE.md"
+  },
+  "tstl@3.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/samchon/tstl",
+    "publisher": "Jeongho Nam",
+    "email": "samchon.github@gmail.com",
+    "url": "https://github.com/samchon",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/tstl",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/tstl/LICENSE"
+  },
+  "typedoc@0.27.9": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/TypeStrong/TypeDoc",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/typedoc",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/typedoc/LICENSE"
+  },
+  "typescript@5.8.3": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/microsoft/TypeScript",
+    "publisher": "Microsoft Corp.",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/typescript",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/typescript/LICENSE.txt"
+  },
+  "typia@9.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/samchon/typia",
+    "publisher": "Jeongho Nam",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/typia",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/typia/LICENSE"
+  },
+  "uuid@11.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/uuidjs/uuid",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/uuid",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/uuid/LICENSE.md"
+  },
+  "vitest@3.2.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitest-dev/vitest",
+    "publisher": "Anthony Fu",
+    "email": "anthonyfu117@hotmail.com",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/vitest",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/server/node_modules/@agentica/core/node_modules/vitest/LICENSE.md"
+  }
+}
+
