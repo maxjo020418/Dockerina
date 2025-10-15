@@ -1,0 +1,145 @@
+{
+  "@agentica/core@0.29.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/wrtnlabs/agentica",
+    "publisher": "Wrtn Technologies",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@agentica/core",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@agentica/core/LICENSE"
+  },
+  "@agentica/rpc@0.29.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/wrtnlabs/agentica",
+    "publisher": "Wrtn Technologies",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@agentica/rpc",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@agentica/rpc/LICENSE"
+  },
+  "@tailwindcss/vite@4.1.11": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tailwindlabs/tailwindcss",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@tailwindcss/vite",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@tailwindcss/vite/LICENSE"
+  },
+  "@types/prismjs@1.26.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@types/prismjs",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@types/prismjs/LICENSE"
+  },
+  "@types/react-dom@19.1.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@types/react-dom",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@types/react-dom/LICENSE"
+  },
+  "@types/react@19.1.8": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@types/react",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@types/react/LICENSE"
+  },
+  "@vitejs/plugin-react@4.7.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitejs/vite-plugin-react",
+    "publisher": "Evan You",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@vitejs/plugin-react",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/@vitejs/plugin-react/LICENSE"
+  },
+  "agentica-template-react@0.0.0": {
+    "licenses": "UNLICENSED",
+    "private": true,
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/README.md"
+  },
+  "globals@15.15.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/globals",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/globals",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/globals/license"
+  },
+  "highlight.js@11.11.1": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/highlightjs/highlight.js",
+    "publisher": "Josh Goebel",
+    "email": "hello@joshgoebel.com",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/highlight.js",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/highlight.js/LICENSE"
+  },
+  "prismjs@1.30.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/PrismJS/prism",
+    "publisher": "Lea Verou",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/prismjs",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/prismjs/LICENSE"
+  },
+  "react-dom@19.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/facebook/react",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/react-dom",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/react-dom/LICENSE"
+  },
+  "react-markdown@10.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/remarkjs/react-markdown",
+    "publisher": "Espen Hovlandsdal",
+    "email": "espen@hovlandsdal.com",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/react-markdown",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/react-markdown/license"
+  },
+  "react@19.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/facebook/react",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/react",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/react/LICENSE"
+  },
+  "rehype-highlight@7.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/rehypejs/rehype-highlight",
+    "publisher": "Titus Wormer",
+    "email": "tituswormer@gmail.com",
+    "url": "https://wooorm.com",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/rehype-highlight",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/rehype-highlight/license"
+  },
+  "remark-gfm@4.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/remarkjs/remark-gfm",
+    "publisher": "Titus Wormer",
+    "email": "tituswormer@gmail.com",
+    "url": "https://wooorm.com",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/remark-gfm",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/remark-gfm/license"
+  },
+  "tailwindcss@4.1.11": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tailwindlabs/tailwindcss",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/tailwindcss",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/tailwindcss/LICENSE"
+  },
+  "tgrid@1.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/samchon/tgrid",
+    "publisher": "Jeongho Nam",
+    "email": "samchon.github@gmail.com",
+    "url": "https://github.com/samchon",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/tgrid",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/tgrid/LICENSE"
+  },
+  "typescript@5.8.3": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/microsoft/TypeScript",
+    "publisher": "Microsoft Corp.",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/typescript",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/typescript/LICENSE.txt"
+  },
+  "vite@6.3.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vitejs/vite",
+    "publisher": "Evan You",
+    "path": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/vite",
+    "licenseFile": "/home/maxjo/Projects/Dockerina/agentica-dockerina/client/node_modules/vite/LICENSE.md"
+  }
+}
+
