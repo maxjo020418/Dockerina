@@ -144,6 +144,17 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
   // PROCESS COMPLETION
   // ----
   const chunks = await StreamUtil.readAll(completionStream);
+  // Accumulate per-choice reasoning from deltas if present (non-standard)
+  const reasoningMap = new Map<number, string>();
+  for (const ch of chunks) {
+    for (const c of ch.choices) {
+      const r = (c.delta as any)?.reasoning;
+      if (typeof r === "string" && r.length > 0) {
+        const prev = reasoningMap.get(c.index) ?? "";
+        reasoningMap.set(c.index, prev + r);
+      }
+    }
+  }
   const completion = ChatGptCompletionMessageUtil.merge(chunks);
   const executes: AgenticaExecuteEvent<Model>[] = [];
 
@@ -256,10 +267,32 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
       const thinks = extractThinkBlocks(choice.message.content);
       if (thinks.length > 0) {
         const event: AgenticaAssistantMessageEvent = createAssistantMessageEvent({
-          get: () => thinks, // "## *CALL AGENT*\n\n" + 
+          // Present <think> as reasoning only; no main text
+          get: () => "",
           done: () => true,
-          stream: toAsyncGenerator(thinks),
-          join: async () => Promise.resolve(thinks),
+          stream: toAsyncGenerator(""),
+          join: async () => Promise.resolve(""),
+          getReasoning: () => thinks,
+        });
+        ctx.dispatch(event);
+      }
+    }
+
+    // If only tool_calls and empty content, still surface reasoning
+    if (
+      choice.message.role === "assistant"
+      && (choice.message.content == null || choice.message.content.length === 0)
+      && manualFallbackTriggered === false
+    ) {
+      const reasoning: string | undefined =
+        reasoningMap.get(choice.index) ?? (choice as any)?.message?.reasoning;
+      if (typeof reasoning === "string" && reasoning.trim().length > 0) {
+        const event: AgenticaAssistantMessageEvent = createAssistantMessageEvent({
+          get: () => "#### *Called function(s)...*",
+          done: () => true,
+          stream: toAsyncGenerator(""),
+          join: async () => Promise.resolve(""),
+          getReasoning: () => reasoning,
         });
         ctx.dispatch(event);
       }
@@ -273,11 +306,13 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
       && manualFallbackTriggered === false
     ) {
       const text: string = choice.message.content;
+      const reasoning: string | undefined = reasoningMap.get(choice.index);
       const event: AgenticaAssistantMessageEvent = createAssistantMessageEvent({
         get: () => text, // "## *CALL AGENT*\n\n" + 
         done: () => true,
         stream: toAsyncGenerator(text),
         join: async () => Promise.resolve(text),
+        getReasoning: () => reasoning,
       });
       ctx.dispatch(event);
     }

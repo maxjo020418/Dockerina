@@ -164,7 +164,7 @@ const main = async (): Promise<void> => {
             }),
 
             // [Custom added parameters] 
-            // NOTE: seems like it's unsupported for newest Ollama models...
+            // NOTE: seems like some are broken(?) for newest Ollama models...
             // enable Chain of Thought reasoning (only for ollama's supported models)
             // REMOVE BELOW PROPERTY FOR OPENAI OR 3RD PARTY
             /*
@@ -172,6 +172,7 @@ const main = async (): Promise<void> => {
             temperature: 0.6,
             top_p: 1.0
             */
+           think: true,
 
             // Serialized calls: present one tool per turn
             serializeCalls: false,

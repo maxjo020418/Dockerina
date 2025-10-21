@@ -199,6 +199,7 @@ export function createAssistantMessageEvent(props: {
   done: () => boolean;
   get: () => string;
   join: () => Promise<string>;
+  getReasoning?: () => string | undefined;
 }): AgenticaAssistantMessageEvent {
   const id: string = v4();
   const created_at: string = new Date().toISOString();
@@ -214,6 +215,7 @@ export function createAssistantMessageEvent(props: {
       created_at,
       done: props.done(),
       text: props.get(),
+      reasoning: props.getReasoning?.(),
     }),
     toHistory: () => ({
       type: "assistantMessage",
@@ -225,6 +227,7 @@ export function createAssistantMessageEvent(props: {
         id,
         created_at,
         text: props.get(),
+        reasoning: props.getReasoning?.(),
       }),
     }),
   };
@@ -236,6 +239,7 @@ export function createDescribeEvent<Model extends ILlmSchema.Model>(props: {
   done: () => boolean;
   get: () => string;
   join: () => Promise<string>;
+  getReasoning?: () => string | undefined;
 }): AgenticaDescribeEvent<Model> {
   const id: string = v4();
   const created_at: string = new Date().toISOString();
@@ -253,6 +257,7 @@ export function createDescribeEvent<Model extends ILlmSchema.Model>(props: {
       executes: props.executes.map(execute => execute.toJSON()),
       done: props.done(),
       text: props.get(),
+      reasoning: props.getReasoning?.(),
     }),
     toHistory: () => ({
       type: "describe",
@@ -266,6 +271,7 @@ export function createDescribeEvent<Model extends ILlmSchema.Model>(props: {
         created_at,
         executes: props.executes.map(execute => execute.toJSON()),
         text: props.get(),
+        reasoning: props.getReasoning?.(),
       }),
     }),
   };

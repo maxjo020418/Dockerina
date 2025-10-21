@@ -1,5 +1,6 @@
 ### Inst.
 commands
+
 ```bash
 pnpm install
 pnpm --filter @agentica/core build
@@ -17,7 +18,9 @@ curl http://[address]:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d @[payload].json
 ```
+
 `.env` for server
+
 ```env
 # all env vars are optional, below are default values.
 OPENAI_API_KEY=NO_KEY

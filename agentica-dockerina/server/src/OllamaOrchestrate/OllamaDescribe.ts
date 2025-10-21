@@ -54,6 +54,7 @@ export async function ollamaDescribe<Model extends ILlmSchema.Model>(
 
   const describeContext: ({
     content: string;
+    reasoning?: string;
     mpsc: MPSC<string>;
   })[] = [];
 
@@ -75,28 +76,39 @@ export async function ollamaDescribe<Model extends ILlmSchema.Model>(
           continue;
         }
 
-        if (choice.delta.content == null) {
+        const deltaAny = choice.delta as any;
+        if (choice.delta.content == null && typeof deltaAny?.reasoning !== "string") {
           continue;
         }
 
         if (describeContext[choice.index] != null) {
-          describeContext[choice.index]!.content += choice.delta.content;
-          describeContext[choice.index]!.mpsc.produce(choice.delta.content);
+          if (choice.delta.content != null) {
+            describeContext[choice.index]!.content += choice.delta.content;
+            describeContext[choice.index]!.mpsc.produce(choice.delta.content);
+          }
+          if (typeof deltaAny?.reasoning === "string") {
+            const prev = describeContext[choice.index]!.reasoning ?? "";
+            describeContext[choice.index]!.reasoning = prev + deltaAny.reasoning;
+          }
           continue;
         }
 
         const mpsc = new MPSC<string>();
 
         describeContext[choice.index] = {
-          content: choice.delta.content,
+          content: choice.delta.content ?? "",
+          reasoning: typeof deltaAny?.reasoning === "string" ? deltaAny.reasoning : undefined,
           mpsc,
         };
-        mpsc.produce(choice.delta.content);
+        if (choice.delta.content != null) {
+          mpsc.produce(choice.delta.content);
+        }
 
         const event = createAssistantMessageEvent({
           stream: streamDefaultReaderToAsyncGenerator(mpsc.consumer.getReader()),
           done: () => mpsc.done(),
           get: () => (describeContext[choice.index]?.content ?? ""), // "## *DESCRIBE AGENT*\n\n" + 
+          getReasoning: () => describeContext[choice.index]?.reasoning,
           join: async () => {
             await mpsc.waitClosed();
             return describeContext[choice.index]!.content;

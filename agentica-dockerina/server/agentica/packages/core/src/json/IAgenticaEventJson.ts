@@ -55,6 +55,12 @@ export namespace IAgenticaEventJson {
      * Conversation text.
      */
     text: string;
+
+    /**
+     * Optional model-provided reasoning separate from `text`.
+     * Present when the upstream API returns `choices[n].message.reasoning`.
+     */
+    reasoning?: string | undefined;
   }
 
   /**
@@ -166,6 +172,11 @@ export namespace IAgenticaEventJson {
      * Description text.
      */
     text: string;
+
+    /**
+     * Optional model-provided reasoning separate from `text`.
+     */
+    reasoning?: string | undefined;
 
     /**
      * Whether the streaming is completed or not.

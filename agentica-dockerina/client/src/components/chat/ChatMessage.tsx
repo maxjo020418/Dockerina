@@ -4,7 +4,7 @@ import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
 import { markdownComponents } from "./MarkdownComponents";
 import { TypingIndicator } from "./TypingIndicator";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 export function parseAndFormatSpecialTags(input: string | null | undefined): string {
   if (input == null) {
@@ -39,6 +39,7 @@ interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  reasoning?: string | undefined;
 }
 
 interface ChatMessageProps {
@@ -48,52 +49,6 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, isLatestAssistant = false }: ChatMessageProps) {
   const isUser = message.role === "user";
-
-  const isThinking = (input: string | null | undefined) => {
-    if (!input) return false;
-    // Remove <think> blocks
-    let withoutThink = input.replace(/<think>[\s\S]*?<\/think>/gi, "");
-
-    // Remove markdown heading lines (e.g., ## SELECT AGENT) -> NO HEADING EXISTS NOW
-    // withoutThink = withoutThink.replace(/^\s{0,3}#{1,6}\s+.*$/gm, "");
-
-    // Remove whitespace
-    return withoutThink.trim().length === 0;
-  };
-
-  const segments = useMemo(() => {
-    if (!message.content) {
-      return [] as Array<{ type: "markdown"; content: string } | { type: "think"; content: string }>;
-    }
-
-    const result: Array<{ type: "markdown"; content: string } | { type: "think"; content: string }> = [];
-    const thinkRegex = /<think>([\s\S]*?)<\/think>/gi;
-    let lastIndex = 0;
-    let match: RegExpExecArray | null;
-
-    while ((match = thinkRegex.exec(message.content)) !== null) {
-      const preceding = message.content.slice(lastIndex, match.index);
-      if (preceding) {
-        result.push({ type: "markdown", content: preceding });
-      }
-
-      const inner = match[1].replace(/^\n+|\n+$/g, "");
-      if (inner) {
-        result.push({ type: "think", content: inner });
-      }
-
-      lastIndex = thinkRegex.lastIndex;
-    }
-
-    const remaining = message.content.slice(lastIndex);
-    if (remaining) {
-      result.push({ type: "markdown", content: remaining });
-    }
-
-    return result.length
-      ? result
-      : [{ type: "markdown", content: message.content }];
-  }, [message.content]);
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -108,31 +63,23 @@ export function ChatMessage({ message, isLatestAssistant = false }: ChatMessageP
           </p>
         ) : (
           (() => {
-            const thinking = isThinking(message.content);
+            const thinking =
+              !message.content || message.content.trim().length === 0;
             return (
               <div className="prose prose-sm prose-invert max-w-none [&_pre]:!p-0 [&_pre]:!m-0 [&_pre]:!bg-transparent">
-                {segments.map((segment, index) => {
-                  if (segment.type === "markdown") {
-                    return (
-                      <ReactMarkdown
-                        key={`markdown-${index}`}
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeHighlight]}
-                        components={markdownComponents}
-                      >
-                        {parseAndFormatSpecialTags(segment.content)}
-                      </ReactMarkdown>
-                    );
-                  }
-
-                  return (
-                    <ThinkBlock
-                      key={`think-${index}`}
-                      content={segment.content}
-                    />
-                  );
-                })}
-                {thinking && isLatestAssistant && <TypingIndicator className="mt-1" />}
+                {message.reasoning && message.reasoning.trim().length > 0 && (
+                  <ReasoningBlock content={message.reasoning} />
+                )}
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeHighlight]}
+                  components={markdownComponents}
+                >
+                  {parseAndFormatSpecialTags(message.content)}
+                </ReactMarkdown>
+                {thinking && isLatestAssistant && (
+                  <TypingIndicator className="mt-1" />
+                )}
               </div>
             );
           })()
@@ -142,27 +89,22 @@ export function ChatMessage({ message, isLatestAssistant = false }: ChatMessageP
   );
 }
 
-interface ThinkBlockProps {
-  content: string;
-}
-
-function ThinkBlock({ content }: ThinkBlockProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
+function ReasoningBlock({ content }: { content: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="mt-1 mb-2 rounded-xl border border-zinc-700/40 bg-zinc-800/40">
+    <div className="mb-2 rounded-xl border border-zinc-700/40 bg-zinc-800/40">
       <button
         type="button"
         className="flex w-full items-center justify-between gap-2 px-3 py-2 text-xs font-medium text-zinc-300 hover:text-white"
-        onClick={() => setIsOpen((prev) => !prev)}
-        aria-expanded={isOpen}
+        onClick={() => setOpen((v: boolean) => !v)}
+        aria-expanded={open}
       >
-        <span>{isOpen ? "Hide thinking" : "Show thinking"}</span>
-        <span className={`transform transition-transform ${isOpen ? "rotate-90" : "rotate-0"}`} aria-hidden="true">
+        <span>{open ? "Hide reasoning" : "Show reasoning"}</span>
+        <span className={`transform transition-transform ${open ? "rotate-90" : "rotate-0"}`} aria-hidden="true">
           {">"}
         </span>
       </button>
-      {isOpen && (
+      {open && (
         <div className="px-3 pb-3 text-xs text-zinc-300">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}

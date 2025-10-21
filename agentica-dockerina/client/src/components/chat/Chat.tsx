@@ -14,18 +14,13 @@ export function Chat() {
   const isWaitingForFirstAssistant = lastMessage?.type === "userMessage";
 
   const hasAssistantThinking = useMemo(() => {
-    const isThinkingOnly = (input: string | null | undefined) => {
-      if (!input) return false;
-      let withoutThink = input.replace(/<think>[\s\S]*?<\/think>/gi, "");
-      withoutThink = withoutThink.replace(/^\s{0,3}#{1,6}\s+.*$/gm, "");
-      return withoutThink.trim().length === 0;
-    };
-
-    const lastChat = messages.at(-1)
-    if (lastChat == null) { return false }
-
+    const lastChat = messages.at(-1);
+    if (lastChat == null) {
+      return false;
+    }
     if (lastChat.type === "assistantMessage" || lastChat.type === "describe") {
-        return isThinkingOnly((lastChat as any).text);
+      const text = (lastChat as any).text;
+      return !text || text.trim().length === 0;
     }
     return false;
   }, [messages]);

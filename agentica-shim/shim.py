@@ -29,7 +29,7 @@ LOG_DIR = os.path.abspath(_log_raw if os.path.isabs(_log_raw) else os.path.join(
 
 UPSTREAM_URL = getenv_multi(
     ['SHIM_URL', 'URL'],
-    'http://sylph-wsl.ragdoll-ule.ts.net:11434/v1/chat/completions'
+    'http://localhost:11434/v1/chat/completions'
 )
 try:
     PORT = int(getenv_multi(['SHIM_PORT', 'PORT'], '8000'))

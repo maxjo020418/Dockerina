@@ -36,7 +36,8 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
                 message={{
                   id: `${externalIndex}`,
                   role: "assistant",
-                  content: message.text
+                  content: message.text,
+                  reasoning: (message as any).reasoning
                 }}
                 isLatestAssistant={externalIndex === lastAssistantIndex}
               />;
@@ -48,7 +49,8 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
                 message={{
                   id: `${externalIndex}`,
                   role: "assistant",
-                  content: message.text
+                  content: message.text,
+                  reasoning: (message as any).reasoning
                 }}
                 isLatestAssistant={externalIndex === lastAssistantIndex}
               />;
