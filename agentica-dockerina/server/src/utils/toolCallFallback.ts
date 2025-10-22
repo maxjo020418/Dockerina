@@ -3,11 +3,6 @@ export interface RawToolCall {
   arguments: Record<string, unknown>;
 }
 
-// Remove all <think>...</think> blocks
-export function stripThink(text: string): string {
-  return (text ?? "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
-}
-
 // Return concatenated think blocks for echoing
 export function extractThinkBlocks(text: string): string {
   const raw = text ?? "";
@@ -39,17 +34,16 @@ export function parseToolCallFromContent(content: string, opts?: { expectName?: 
 // Attempts direct text, JSON code fence, or braces slice.
 export function parseRawJsonAfterThink(content: string, opts?: { expectName?: string }): RawToolCall | null {
   if (typeof content !== "string") return null;
-  const stripped = stripThink(content);
-  if (!stripped) return null;
+  if (!content) return null;
 
   const candidates: string[] = [];
-  candidates.push(stripped);
-  const fenceMatch = stripped.match(/```(?:json)?\n([\s\S]*?)\n```/i);
+  candidates.push(content);
+  const fenceMatch = content.match(/```(?:json)?\n([\s\S]*?)\n```/i);
   if (fenceMatch?.[1]) candidates.push(fenceMatch[1].trim());
-  const firstBrace = stripped.indexOf("{");
-  const lastBrace = stripped.lastIndexOf("}");
+  const firstBrace = content.indexOf("{");
+  const lastBrace = content.lastIndexOf("}");
   if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    candidates.push(stripped.slice(firstBrace, lastBrace + 1));
+    candidates.push(content.slice(firstBrace, lastBrace + 1));
   }
 
   for (const cand of candidates) {

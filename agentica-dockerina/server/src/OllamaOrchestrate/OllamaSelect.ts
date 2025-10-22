@@ -264,8 +264,42 @@ async function step<Model extends ILlmSchema.Model>(
   // PROCESS COMPLETION
   // ----
   for (const choice of completion.choices) {
+    // Extra fallback: if content is empty, no tool calls, but reasoning exists -> retry
+    try {
+      const retryLimit = ctx.config?.retry ?? AgenticaConstant.RETRY;
+      const noToolCalls =
+        choice.message.tool_calls == null || choice.message.tool_calls.length === 0;
+      const emptyContent =
+        choice.message.content == null || (choice.message as any).content?.length === 0 ||
+        (typeof choice.message.content === "string" && choice.message.content.length === 0);
+      const choiceReasoning: string | undefined =
+        reasoningMap.get(choice.index) ?? (choice as any)?.message?.reasoning;
+
+      if (
+        choice.message.role === "assistant"
+        && emptyContent
+        && noToolCalls
+        && typeof choiceReasoning === "string"
+        && choiceReasoning.trim().length > 0
+      ) {
+        if (retry < retryLimit) {
+          console.warn(
+            `[OllamaSelect.ts] WARNING: Empty assistant content with no function call but reasoning present. Retrying select request... (retry ${retry}/${retryLimit})`,
+          );
+          return step(ctx, operations, retry);
+        } else {
+          console.warn(
+            `[OllamaSelect.ts] WARNING: Empty assistant content with no function call but reasoning present. Retry limit reached; proceeding without retry.`,
+          );
+        }
+      }
+    } catch (_) {
+      // non-fatal: continue with normal processing
+    }
+
     let processedAny = false;
     let manualFallbackTriggered = false;
+
     // FUNCTION CALLING
     if (choice.message.tool_calls != null) {
       for (const tc of choice.message.tool_calls) {
