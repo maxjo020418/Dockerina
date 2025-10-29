@@ -308,7 +308,7 @@ export async function ollamaCall<Model extends ILlmSchema.Model>(
       const text: string = choice.message.content;
       const reasoning: string | undefined = reasoningMap.get(choice.index);
       const event: AgenticaAssistantMessageEvent = createAssistantMessageEvent({
-        get: () => text, // "## *CALL AGENT*\n\n" + 
+        get: () => "#### *CALL AGENT*\n\n" + text, // "#### *CALL AGENT*\n\n" + 
         done: () => true,
         stream: toAsyncGenerator(text),
         join: async () => Promise.resolve(text),

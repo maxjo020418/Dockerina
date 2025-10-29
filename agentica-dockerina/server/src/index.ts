@@ -123,14 +123,14 @@ const main = async (): Promise<void> => {
 
             systemPrompt: {
               common: () => [
-                "The user's choice of language is \"${locale}\".",
+                "The user's choice of language is \"${locale}\", reply in that language.",
                 "The user's timezone is: \"${timezone}\".",
               ].join("\n"),
 
               select: () => [
                 "You are a helpful agent that can select functions to call.",
                 "If you don't need to or can't use functions, do your best within your abilities."
-                // extra instuctions in OllamaSelect.ts (inserted into userprompts)
+                // extra instructions in OllamaSelect.ts (inserted into userprompts)
               ].join("\n"),
 
               execute: () => [  // call.ts
@@ -163,18 +163,15 @@ const main = async (): Promise<void> => {
               describe: ollamaDescribe,
             }),
 
-            // [Custom added parameters] 
-            // NOTE: seems like some are broken(?) for newest Ollama models...
-            // enable Chain of Thought reasoning (only for ollama's supported models)
-            // REMOVE BELOW PROPERTY FOR OPENAI OR 3RD PARTY
-            /*
-            think: true,
-            temperature: 0.6,
-            top_p: 1.0
-            */
-           think: true,
+            // [Custom added parameters]
+            // Include only when environment variables are set.
+            // THINK -> think (boolean), TEMPERATURE -> temperature (number), TOP_P -> top_p (number)
+            ...(SGlobal.env.THINK !== undefined ? { think: SGlobal.env.THINK } : {}),
+            ...(SGlobal.env.TEMPERATURE !== undefined ? { temperature: SGlobal.env.TEMPERATURE } : {}),
+            ...(SGlobal.env.TOP_P !== undefined ? { top_p: SGlobal.env.TOP_P } : {}),
 
             // Serialized calls: present one tool per turn
+            // (warning: prone to errors or premature cancellations)
             serializeCalls: false,
           },
 

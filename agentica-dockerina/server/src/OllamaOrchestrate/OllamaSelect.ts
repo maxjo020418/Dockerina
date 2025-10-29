@@ -352,7 +352,7 @@ async function step<Model extends ILlmSchema.Model>(
     }
 
     // ASSISTANT MESSAGE
-    // (LLM's generated message)
+    // LLM's generated message
     if (
       choice.message.role === "assistant"
       && choice.message.content != null
@@ -364,7 +364,7 @@ async function step<Model extends ILlmSchema.Model>(
         stream: toAsyncGenerator(choice.message.content),
         join: async () => Promise.resolve(choice.message.content!),
         done: () => true,
-        get: () => choice.message.content!, // "## *SELECT AGENT*\n\n" + 
+        get: () => "#### *SELECT AGENT*\n\n" + choice.message.content!, // "#### *SELECT AGENT*\n\n" + 
         getReasoning: () => reasoning,
       });
       ctx.dispatch(event);

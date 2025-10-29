@@ -107,7 +107,7 @@ export async function ollamaDescribe<Model extends ILlmSchema.Model>(
         const event = createAssistantMessageEvent({
           stream: streamDefaultReaderToAsyncGenerator(mpsc.consumer.getReader()),
           done: () => mpsc.done(),
-          get: () => (describeContext[choice.index]?.content ?? ""), // "## *DESCRIBE AGENT*\n\n" + 
+          get: () => "#### *DESCRIBE AGENT*\n\n" + (describeContext[choice.index]?.content ?? ""), // "## *DESCRIBE AGENT*\n\n" + 
           getReasoning: () => describeContext[choice.index]?.reasoning,
           join: async () => {
             await mpsc.waitClosed();
